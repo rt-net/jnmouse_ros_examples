@@ -79,19 +79,6 @@ class ObjectTracker():
     def _object_is_smaller_than_default(self):
         return self._object_pixels_ratio() < -0.01
 
-    def _extract_line_in_binary(self, cv_image):
-        if cv_image is None:
-            return None
-        min_value = 0;
-        max_value = 100;
-
-        gray_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        # 画面の下半分のみを使用するため，上半分を白くする
-        # 
-        gray_img[:gray_img.shape[0]/2, :] = 255
-        binary = cv2.inRange(gray_img, min_value, max_value)
-
-        return binary
 
     def _calibrate_object_pixels_default(self):
         if self._object_pixels_default == 0 and self._object_pixels != 0:
@@ -111,6 +98,7 @@ class ObjectTracker():
         if biggest_contour_index is False:
             return False
         else:
+            #print(contours[biggest_contour_index].shape)
             return contours[biggest_contour_index]
 
     def _calculate_centroid_point(self, contour):
@@ -147,6 +135,30 @@ class ObjectTracker():
         rot_vel = pos_x_rate * VELOCITY
         return rot_vel
 
+    def _extract_line_in_binary(self, cv_image):
+        if cv_image is None:
+            return None
+        min_value = 0;
+        max_value = 100;
+
+        gray_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        # 画面の下半分のみを使用するため，上半分を白くする
+        # 
+        gray_img[:gray_img.shape[0]/2, :] = 255
+        binary = cv2.inRange(gray_img, min_value, max_value)
+
+        return binary
+
+    def _extract_tracking_point(self, binary_img):
+        bottom_line = binary_img[-2:-1, :]
+        line_position = np.where(bottom_line > 0)
+        mean = np.sum(line_position[1])/line_position[1].shape
+        tracking_point = (mean, binary_img.shape[0] - 1)
+        return tracking_point
+ 
+    def _draw_tracking_point(self, input_img, tracking_point):
+        return cv2.circle(input_img, tracking_point, 15, (255, 0, 0), thickness=-1)
+
     def image_processing(self):
         object_image = copy.deepcopy(self._captured_image)
         # modifying
@@ -154,21 +166,23 @@ class ObjectTracker():
         object_binary_img = self._extract_line_in_binary(self._captured_image)
 
         if object_binary_img is not None:
-            biggest_contour = self._extract_biggest_contour(object_binary_img)
-            if biggest_contour is not False:
-                self._object_pixels = cv2.contourArea(biggest_contour)
-                self._calibrate_object_pixels_default()
-
-                object_image = self._draw_contour(
-                    object_image, biggest_contour)
-
+            tracking_point = self._extract_tracking_point(object_binary_img)
+            tracking_point_img = self._draw_tracking_point(object_binary_img, tracking_point)
+#            biggest_contour = self._extract_biggest_contour(object_binary_img)
+#            if biggest_contour is not False:
+#                self._object_pixels = cv2.contourArea(biggest_contour)
+#                self._calibrate_object_pixels_default()
+#
+#                object_image = self._draw_contour(
+#                    object_image, biggest_contour)
+#
 #                point = self._calculate_centroid_point(biggest_contour)
 #                if point is not False:
 #                    self._point_of_centroid = point
 #                    object_image = self._draw_centroid(object_image, point)
 
             self._monitor(object_binary_img, self._pub_binary_image)
-            self._monitor(object_image, self._pub_pbject_image)
+            self._monitor(tracking_point_img, self._pub_pbject_image)
 
     def control(self):
         cmd_vel = Twist()
