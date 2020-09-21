@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>jetson_nano_mouse_line_trace</name>
+  <version>0.0.1</version>
+  <description>The jetson_nano_mouse_line_trace package</description>
+  <maintainer email="takuminpc@gmail.com">tentenNT</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roslint</build_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>raspimouse_ros_2</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>cv_camera</exec_depend>
+  <exec_depend>web_video_server</exec_depend>
+  <exec_depend>joy</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>gmapping</exec_depend>
+  <exec_depend>urg_node</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>map_server</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>hls_lfcd_lds_driver</exec_depend>
+  <exec_depend>rt_usb_9axisimu_driver</exec_depend>
+
+  <export>
+  </export>
+
+</package>
