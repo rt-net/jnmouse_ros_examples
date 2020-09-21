@@ -98,7 +98,6 @@ class ObjectTracker():
         if biggest_contour_index is False:
             return False
         else:
-            #print(contours[biggest_contour_index].shape)
             return contours[biggest_contour_index]
 
     def _calculate_centroid_point(self, contour):
@@ -143,7 +142,6 @@ class ObjectTracker():
 
         gray_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         # 画面の下半分のみを使用するため，上半分を白くする
-        # 
         gray_img[:gray_img.shape[0]/2, :] = 255
         binary = cv2.inRange(gray_img, min_value, max_value)
 
@@ -159,6 +157,32 @@ class ObjectTracker():
     def _draw_tracking_point(self, input_img, tracking_point):
         return cv2.circle(input_img, tracking_point, 15, (255, 0, 0), thickness=-1)
 
+
+    def _extract_tracking_line(self, binary_img):
+        tracking_contour_index = False
+        center = binary_img.shape[1]/2
+        line_center = 0
+        kernel = np.ones((5,5), np.uint8)
+        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_OPEN, kernel)
+        contours, hierarchy = cv2.findContours(
+            binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for i, cnt in enumerate(contours):
+            cnt = np.array(cnt)
+            print(cnt.shape)
+            #bottom_contours = contours > binary_img.shape[0] - 10
+            #print(contours)
+            # これは２列目を抽出して条件分岐している
+            # おそらく１列目を全て0にしてマスクにする方が分かりやすい
+            # 次回実装する
+            bottom_point_y = cnt[:, :, 1]
+            print(bottom_point_y.shape)
+            bottom_point = bottom_point_y[np.any(bottom_point_y > binary_img.shape[0] - 10, axis=1)]
+            print(bottom_point)
+            #print(contours.shape)
+            #print(bottom_point)
+#        return contours[biggest_contour_index]
+
+
     def image_processing(self):
         object_image = copy.deepcopy(self._captured_image)
         # modifying
@@ -166,7 +190,9 @@ class ObjectTracker():
         object_binary_img = self._extract_line_in_binary(self._captured_image)
 
         if object_binary_img is not None:
+            print(object_binary_img.shape)
             tracking_point = self._extract_tracking_point(object_binary_img)
+            self._extract_tracking_line(object_binary_img)
             tracking_point_img = self._draw_tracking_point(object_binary_img, tracking_point)
 #            biggest_contour = self._extract_biggest_contour(object_binary_img)
 #            if biggest_contour is not False:
