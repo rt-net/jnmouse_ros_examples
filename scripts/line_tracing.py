@@ -48,7 +48,7 @@ class ObjectTracker():
 
     def _image_callback(self, img):
         try:
-            self._captured_image = self._cv_bridge.imgmsg_to_cv2(img, "mono8")
+            self._captured_image = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
         except CvBridgeError as e:
             rospy.logerr(e)
 
@@ -83,9 +83,13 @@ class ObjectTracker():
         if cv_image is None:
             return None
         min_value = 0;
-        max_value = 20;
+        max_value = 100;
 
-        binary = cv2.inRange(cv_image, min_value, max_value)
+        gray_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        # 画面の下半分のみを使用するため，上半分を白くする
+        # 
+        gray_img[:gray_img.shape[0]/2, :] = 255
+        binary = cv2.inRange(gray_img, min_value, max_value)
 
         return binary
 
