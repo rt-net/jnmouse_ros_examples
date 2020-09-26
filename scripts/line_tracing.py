@@ -33,7 +33,7 @@ class ObjectTracker():
         self._captured_img = None
         self._object_pixels = 0  # Maximum area detected in the current image[pixel]
         self._object_pixels_default = 0  # Maximum area detected from the first image[pixel]
-        self._point_of_centroid = None
+        self._point_of_line_center = None
 
         self._pub_binary_img = rospy.Publisher("binary", Image, queue_size=1)
         self._pub_pbject_img = rospy.Publisher("tracking_line", Image, queue_size=1)
@@ -131,11 +131,10 @@ class ObjectTracker():
 
     def _rotation_velocity(self):
         VELOCITY = 0.25 * math.pi
-        if not self._object_is_detected() or self._point_of_centroid is None:
+        if self._point_of_line_center is None:
             return 0.0
-
         half_width = self._captured_img.shape[1] / 2.0
-        pos_x_rate = (half_width - self._point_of_centroid[0]) / half_width
+        pos_x_rate = (half_width - self._point_of_line_center[0]) / half_width
         rot_vel = pos_x_rate * VELOCITY
         return rot_vel
 
@@ -204,9 +203,8 @@ class ObjectTracker():
 #            #print(contours.shape)
 #            #print(bottom_point)
 ##        return contours[biggest_contour_index]
-    def _draw_tracking_point(self, tracking_img, center_point):
-        return cv2.circle(tracking_img, center_point, 5, (0, 255, 0), -1)
-
+    def _draw_tracking_point(self, tracking_img):
+        return cv2.circle(tracking_img, self._point_of_line_center, 5, (0, 255, 0), -1)
 
     def img_processing(self):
         line_img = copy.deepcopy(self._captured_img)
@@ -223,9 +221,10 @@ class ObjectTracker():
             biggest_contour = self._extract_biggest_contour(binary_line_img)
             if biggest_contour is not False:
                 line_img = cv2.drawContours(line_img, [biggest_contour], 0, (0, 255, 0), 5)
-                line_center_point = self._extract_line_center(line_img, biggest_contour)
-                if line_center_point is not None:
-                    tracking_img = self._draw_tracking_point(tracking_img, line_center_point)
+                self._point_of_line_center = self._extract_line_center(line_img, biggest_contour)
+                if self._point_of_line_center is not None:
+                    tracking_img = self._draw_tracking_point(tracking_img)
+                    print(self._point_of_line_center)
 #                self._object_pixels = cv2.contourArea(biggest_contour)
 #                self._calibrate_object_pixels_default()
 #
@@ -243,18 +242,20 @@ class ObjectTracker():
 
     def control(self):
         cmd_vel = Twist()
-        if self._object_is_detected():
-            # Move backward and forward by difference from default area
-            if self._object_is_smaller_than_default():
-                cmd_vel.linear.x = 0.1
-                print("forward")
-            elif self._object_is_bigger_than_default():
-                cmd_vel.linear.x = -0.1
-                print("backward")
-            else:
-                cmd_vel.linear.x = 0
-                print("stay")
-            cmd_vel.angular.z = self._rotation_velocity()
+#        if self._object_is_detected():
+#            # Move backward and forward by difference from default area
+#            if self._object_is_smaller_than_default():
+#                cmd_vel.linear.x = 0.1
+#                print("forward")
+#            elif self._object_is_bigger_than_default():
+#                cmd_vel.linear.x = -0.1
+#                print("backward")
+#            else:
+        cmd_vel.linear.x = 0.1
+        print("stay")
+
+        cmd_vel.angular.z = self._rotation_velocity()
+
         self._pub_cmdvel.publish(cmd_vel)
 
 
