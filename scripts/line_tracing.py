@@ -26,13 +26,11 @@ from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger
 
 
-class ObjectTracker():
+class LineTracker():
 
     def __init__(self):
         self._cv_bridge = CvBridge()
         self._captured_img = None
-        self._object_pixels = 0  # Maximum area detected in the current image[pixel]
-        self._object_pixels_default = 0  # Maximum area detected from the first image[pixel]
         self._point_of_line_center = None
 
         self._pub_binary_img = rospy.Publisher("binary", Image, queue_size=1)
@@ -55,35 +53,6 @@ class ObjectTracker():
 
     def _pixels(self, cv_img):
         return cv_img.shape[0] * cv_img.shape[1]
-
-    def _object_is_detected(self):
-        # Lower limit of the ratio of the detected area to the screen.
-        # Object tracking is not performed below this ratio.
-        LOWER_LIMIT = 0.01
-
-        if self._captured_img is not None:
-            object_per_img = self._object_pixels / self._pixels(self._captured_img)
-            return object_per_img > LOWER_LIMIT
-        else:
-            return False
-
-    def _object_pixels_ratio(self):
-        if self._captured_img is not None:
-            diff_pixels = self._object_pixels - self._object_pixels_default
-            return diff_pixels / self._pixels(self._captured_img)
-        else:
-            return 0
-
-    def _object_is_bigger_than_default(self):
-        return self._object_pixels_ratio() > 0.01
-
-    def _object_is_smaller_than_default(self):
-        return self._object_pixels_ratio() < -0.01
-
-
-    def _calibrate_object_pixels_default(self):
-        if self._object_pixels_default == 0 and self._object_pixels != 0:
-            self._object_pixels_default = self._object_pixels
 
     def _extract_biggest_contour(self, binary_img):
         biggest_contour_index = False
@@ -152,13 +121,6 @@ class ObjectTracker():
 
         return binary
 
-#    def _extract_tracking_point(self, binary_img):
-#        bottom_line = binary_img[-2:-1, :]
-#        line_position = np.where(bottom_line > 0)
-#        mean = np.sum(line_position[1])/line_position[1].shape
-#        tracking_point = (mean, binary_img.shape[0] - 1)
-#        return tracking_point
- 
     def _draw_tracking_point(self, input_img, tracking_point):
         return cv2.circle(input_img, tracking_point, 15, (255, 0, 0), thickness=-1)
 
@@ -179,44 +141,15 @@ class ObjectTracker():
         except IndexError:
             return None
 
-# 最大面積のラインをトレースすることにしたので保留
-#    def _extract_tracking_line(self, binary_img):
-#        tracking_contour_index = False
-#        center = binary_img.shape[1]/2
-#        line_center = 0
-#        kernel = np.ones((5,5), np.uint8)
-#        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_OPEN, kernel)
-#        contours, hierarchy = cv2.findContours(
-#            binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#        for i, cnt in enumerate(contours):
-#            cnt = np.array(cnt)
-#            print(cnt.shape)
-#            #bottom_contours = contours > binary_img.shape[0] - 10
-#            #print(contours)
-#            # これは２列目を抽出して条件分岐している
-#            # おそらく１列目を全て0にしてマスクにする方が分かりやすい
-#            # 次回実装する
-#            bottom_point_y = cnt[:, :, 1]
-#            print(bottom_point_y.shape)
-#            bottom_point = bottom_point_y[np.any(bottom_point_y > binary_img.shape[0] - 10, axis=1)]
-#            print(bottom_point)
-#            #print(contours.shape)
-#            #print(bottom_point)
-##        return contours[biggest_contour_index]
     def _draw_tracking_point(self, tracking_img):
         return cv2.circle(tracking_img, self._point_of_line_center, 5, (0, 255, 0), -1)
 
     def img_processing(self):
         line_img = copy.deepcopy(self._captured_img)
         tracking_img = copy.deepcopy(self._captured_img)
-        # modifying 1
-        # object tracking proc to line tracing proc
         binary_line_img = self._extract_line_in_binary(self._captured_img)
 
         if binary_line_img is not None:
-#            tracking_point = self._extract_tracking_point(object_binary_img)
-#            self._extract_tracking_line(object_binary_img)
-#            tracking_point_img = self._draw_tracking_point(object_binary_img, tracking_point)
             # 画面中に最も大きく映るラインをトレースする
             biggest_contour = self._extract_biggest_contour(binary_line_img)
             if biggest_contour is not False:
@@ -225,16 +158,6 @@ class ObjectTracker():
                 if self._point_of_line_center is not None:
                     tracking_img = self._draw_tracking_point(tracking_img)
                     print(self._point_of_line_center)
-#                self._object_pixels = cv2.contourArea(biggest_contour)
-#                self._calibrate_object_pixels_default()
-#
-#                object_img = self._draw_contour(
-#                    object_img, biggest_contour)
-#
-#                point = self._calculate_centroid_point(biggest_contour)
-#                if point is not False:
-#                    self._point_of_centroid = point
-#                    object_img = self._draw_centroid(object_img, point)
 
             self._monitor(line_img, self._pub_pbject_img)
             self._monitor(binary_line_img, self._pub_binary_img)
@@ -242,17 +165,7 @@ class ObjectTracker():
 
     def control(self):
         cmd_vel = Twist()
-#        if self._object_is_detected():
-#            # Move backward and forward by difference from default area
-#            if self._object_is_smaller_than_default():
-#                cmd_vel.linear.x = 0.1
-#                print("forward")
-#            elif self._object_is_bigger_than_default():
-#                cmd_vel.linear.x = -0.1
-#                print("backward")
-#            else:
-        cmd_vel.linear.x = 0.1
-        print("stay")
+        cmd_vel.linear.x = 0.05
 
         cmd_vel.angular.z = self._rotation_velocity()
 
@@ -262,11 +175,11 @@ class ObjectTracker():
 if __name__ == '__main__':
     rospy.init_node('line_tracing')
     rospy.sleep(3.)
-    ot = ObjectTracker()
+    lt = LineTracker()
 
     rate = rospy.Rate(60)
     rate.sleep()
     while not rospy.is_shutdown():
-        ot.img_processing()
-        ot.control()
+        lt.img_processing()
+        lt.control()
         rate.sleep()
