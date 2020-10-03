@@ -32,6 +32,8 @@ class LineTracker():
         self._cv_bridge = CvBridge()
         self._captured_img = None
         self._point_of_line_center = None
+        self._roi = None
+        self._expand_range = 50
 
         self._pub_binary_img = rospy.Publisher("binary", Image, queue_size=1)
         self._pub_pbject_img = rospy.Publisher("tracking_line", Image, queue_size=1)
@@ -50,45 +52,6 @@ class LineTracker():
             self._captured_img = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
         except CvBridgeError as e:
             rospy.logerr(e)
-
-    def _pixels(self, cv_img):
-        return cv_img.shape[0] * cv_img.shape[1]
-
-    def _extract_biggest_contour(self, binary_img):
-        biggest_contour_index = False
-        biggest_contour_area = 0
-        kernel = np.ones((5,5), np.uint8)
-
-        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_OPEN, kernel)
-        contours, hierarchy = cv2.findContours(
-            binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        for i, cnt in enumerate(contours):
-            area = cv2.contourArea(cnt)
-            if biggest_contour_area < area:
-                biggest_contour_area = area
-                biggest_contour_index = i
-
-        if biggest_contour_index is False:
-            return False
-        else:
-            return contours[biggest_contour_index]
-
-    def _calculate_centroid_point(self, contour):
-        point = False
-        if self._object_is_detected():
-            M = cv2.moments(contour)
-            centroid_x = int(M['m10'] / M['m00'])
-            centroid_y = int(M['m01'] / M['m00'])
-            point = (centroid_x, centroid_y)
-
-        return point
-
-    def _draw_contour(self, input_img, contour):
-        return cv2.drawContours(input_img, [contour], 0, (0, 255, 0), 5)
-
-    def _draw_centroid(self, input_img, point_centroid):
-        return cv2.circle(input_img, point_centroid, 15, (255, 0, 0), thickness=-1)
 
     def _monitor(self, img, pub):
         if img.ndim == 2:
@@ -144,24 +107,89 @@ class LineTracker():
     def _draw_tracking_point(self, tracking_img):
         return cv2.circle(tracking_img, self._point_of_line_center, 5, (0, 255, 0), -1)
 
+    
+    def _preprocessing(self, binary_img):
+        kernel = np.ones((7,7), np.uint8)
+        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
+        return binary_img
+
+    def _update_roi(self, points):
+        try:
+            x, y, w, h = cv2.boundingRect(points)
+        except:
+            x, y, w, h = (0, 0, self._captured_img.shape[1], self._captured_img.shape[0])
+        ex = self._expand_range
+        roi_x = x-ex
+        roi_y = y-ex
+        roi_w = w+ex*2
+        roi_h = h+ex*2
+
+        if roi_x < 0:
+            roi_x = 0
+        if roi_y < 0:
+            roi_y = 0
+        if roi_x + roi_w > self._captured_img.shape[1]:
+            roi_w = self._captured_img.shape[1] - roi_x
+        if roi_y + roi_h > self._captured_img.shape[0]:
+            roi_h = self._captured_img.shape[0] - roi_y
+
+        self._roi = (roi_x, roi_y, roi_w, roi_h)
+
+    def _draw_roi(self, img):
+        x, y, w, h = self._roi
+        roi_img = copy.deepcopy(img)
+        roi_img = cv2.rectangle(roi_img, (x, y), (x+w, y+h), (255,0,0), 4)
+        return roi_img
+
+    def _extract_biggest_contour(self, binary_img):
+        biggest_contour_index = False
+        biggest_contour_area = 0
+        if self._roi is None:
+            x, y, w, h = (0, 0, binary_img.shape[1], binary_img.shape[1])
+        else:
+            x, y, w, h = self._roi
+        trimed_img = binary_img[y:y+h, x:x+w]
+        contours, hierarchy = cv2.findContours(
+            trimed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE, offset=(x,y))
+
+        for i, cnt in enumerate(contours):
+            area = cv2.contourArea(cnt)
+            if biggest_contour_area < area:
+                biggest_contour_area = area
+                biggest_contour_index = i
+
+        if biggest_contour_index is False:
+            return False
+        else:
+            return contours[biggest_contour_index]
+
     def img_processing(self):
         line_img = copy.deepcopy(self._captured_img)
         tracking_img = copy.deepcopy(self._captured_img)
         binary_line_img = self._extract_line_in_binary(self._captured_img)
 
         if binary_line_img is not None:
-            # 画面中に最も大きく映るラインをトレースする
+            # モルフォロジー
+            binary_line_img = self._preprocessing(binary_line_img)
+            # ROI中から輪郭を検出
+            # 画面中に最も大きく映るラインとしてトレースする
             biggest_contour = self._extract_biggest_contour(binary_line_img)
+            # 大きく映ったラインの輪郭点の位置からROIを更新
+            self._update_roi(biggest_contour)
+            roi_img = self._draw_roi(binary_line_img)
+
             if biggest_contour is not False:
                 line_img = cv2.drawContours(line_img, [biggest_contour], 0, (0, 255, 0), 5)
                 self._point_of_line_center = self._extract_line_center(line_img, biggest_contour)
                 if self._point_of_line_center is not None:
                     tracking_img = self._draw_tracking_point(tracking_img)
                     print(self._point_of_line_center)
+                    print(self._roi)
 
             self._monitor(line_img, self._pub_pbject_img)
             self._monitor(binary_line_img, self._pub_binary_img)
-            self._monitor(tracking_img, self._pub_test_img)
+            self._monitor(roi_img, self._pub_test_img)
+            
 
     def control(self):
         cmd_vel = Twist()
