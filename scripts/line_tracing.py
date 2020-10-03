@@ -62,7 +62,7 @@ class LineTracker():
             pass
 
     def _rotation_velocity(self):
-        VELOCITY = 0.25 * math.pi
+        VELOCITY = 0.75 * math.pi
         if self._point_of_line_center is None:
             return 0.0
         half_width = self._captured_img.shape[1] / 2.0
@@ -193,7 +193,7 @@ class LineTracker():
 
     def control(self):
         cmd_vel = Twist()
-        cmd_vel.linear.x = 0.05
+        cmd_vel.linear.x = 0.2
 
         cmd_vel.angular.z = self._rotation_velocity()
 
