@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(jetson_nano_mouse_line_trace)
+project(jetson_nano_mouse_line_following)
 
 find_package(catkin REQUIRED COMPONENTS
   roslint

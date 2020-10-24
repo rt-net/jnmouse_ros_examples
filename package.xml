@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>jetson_nano_mouse_line_trace</name>
+  <name>jetson_nano_mouse_line_following</name>
   <version>0.0.1</version>
   <description>The jetson_nano_mouse_line_trace package</description>
   <maintainer email="takuminpc@gmail.com">tentenNT</maintainer>
