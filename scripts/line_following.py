@@ -26,7 +26,7 @@ from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger
 
 
-class LineTracker():
+class LineFollower():
     def __init__(self):
         self._cv_bridge = CvBridge()
         self._captured_img = None
@@ -41,7 +41,7 @@ class LineTracker():
         self._pub_roi_img = rospy.Publisher("roi", Image, queue_size=1)
         self._pub_cmdvel = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
-        self._sub_img = rospy.Subscriber("/csi_cam_0/image_raw", Image, self._img_callback)
+        self._sub_img = rospy.Subscriber("/stereo/csi_cam_0/image_raw", Image, self._img_callback)
 
         rospy.wait_for_service("/motor_on")
         rospy.wait_for_service("/motor_off")
@@ -85,7 +85,6 @@ class LineTracker():
         # しきい値処理用の輝度値
         min_value = 0;
         max_value = 100;
-
         mono_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
 
         # 画面上部にはライン以外の情報が多いことから
@@ -97,13 +96,10 @@ class LineTracker():
         return binary
 
 
-    def _draw_tracking_point(self, input_img, tracking_point):
-        return cv2.circle(input_img, tracking_point, 15, (255, 0, 0), thickness=-1)
-
     def _extract_line_center(self, line_img, contour):
         void_img = np.zeros(line_img.shape, dtype=np.uint8)
-        contour_line_img = cv2.drawContours(void_img, [contour], 0, (0, 255, 0), 1)
-        binary_img = cv2.cvtColor(contour_line_img, cv2.COLOR_BGR2GRAY)
+        contour_img = cv2.drawContours(void_img, [contour], 0, (0, 255, 0), 1)
+        binary_img = cv2.cvtColor(contour_img, cv2.COLOR_BGR2GRAY)
         scan_height = binary_img.shape[0] - 10
         scan_line = binary_img[scan_height]
         found_edge = np.flatnonzero(scan_line)
@@ -118,10 +114,6 @@ class LineTracker():
             return None
 
 
-    def _draw_tracking_point(self, tracking_img):
-        return cv2.circle(tracking_img, self._point_of_line_center, 5, (0, 255, 0), -1)
-
-    
     def _preprocessing(self, binary_img):
         # ノイズ除去のためモルフォロジーを行う
         kernel = np.ones((7,7), np.uint8)
@@ -154,11 +146,20 @@ class LineTracker():
         self._roi = (roi_x, roi_y, roi_w, roi_h)
 
 
-    def _draw_roi(self, img):
+    def _draw_result_img(self, img, contour):
+        # ROIの描画（青線）
         x, y, w, h = self._roi
         roi_img = copy.deepcopy(img)
         roi_img = cv2.rectangle(roi_img, (x, y), (x+w, y+h), (255,0,0), 4)
-        return roi_img
+
+        # ラインの輪郭の描画（緑線）
+        line_img = cv2.drawContours(roi_img, [contour], 0, (0, 255, 0), 5)
+
+        # 追跡点の描画（赤円）
+        result_img = cv2.circle(line_img, self._point_of_line_center, 15, (0, 0, 255), thickness=-1)
+        print(self._point_of_line_center)
+
+        return result_img
 
 
     def _extract_biggest_contour(self, binary_img):
@@ -189,11 +190,11 @@ class LineTracker():
             return contours[biggest_contour_index]
 
     def img_processing(self):
-        line_img = copy.deepcopy(self._captured_img)
-        tracking_img = copy.deepcopy(self._captured_img)
-        binary_line_img = self._extract_line_in_binary(self._captured_img)
-
-        if binary_line_img is not None:
+        org_img = copy.deepcopy(self._captured_img)
+        input_img = copy.deepcopy(org_img)
+        result_img = None
+        if input_img is not None:
+            binary_line_img = self._extract_line_in_binary(input_img)
             # 画像の前処理
             binary_line_img = self._preprocessing(binary_line_img)
 
@@ -203,18 +204,15 @@ class LineTracker():
 
             # 最大ラインの位置からROIを更新
             self._update_roi(biggest_contour)
-            roi_img = self._draw_roi(binary_line_img)
 
             if biggest_contour is not False:
-                line_img = cv2.drawContours(roi_img, [biggest_contour], 0, (0, 255, 0), 5)
                 # ラインの中央を検出
-                self._point_of_line_center = self._extract_line_center(line_img, biggest_contour)
+                self._point_of_line_center = self._extract_line_center(org_img, biggest_contour)
                 if self._point_of_line_center is not None:
-                    tracking_img = self._draw_tracking_point(line_img)
-
-            # 画像処理結果をパブリッシュ
-            self._monitor(line_img, self._pub_line_img)
-            
+                    result_img = self._draw_result_img(org_img, biggest_contour)
+                    # 画像処理結果をパブリッシュ
+                    self._monitor(result_img, self._pub_line_img)
+                
 
     def control(self):
         cmd_vel = Twist()
@@ -226,11 +224,11 @@ class LineTracker():
 
 if __name__ == '__main__':
     rospy.init_node('line_tracing')
-    lt = LineTracker()
+    lf = LineFollower()
 
     rate = rospy.Rate(60)
     rate.sleep()
     while not rospy.is_shutdown():
-        lt.img_processing()
-        lt.control()
+        lf.img_processing()
+        lf.control()
         rate.sleep()
