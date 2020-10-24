@@ -36,9 +36,7 @@ class LineFollower():
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
 
-        self._pub_binary_img = rospy.Publisher("binary", Image, queue_size=1)
-        self._pub_line_img = rospy.Publisher("following_line", Image, queue_size=1)
-        self._pub_roi_img = rospy.Publisher("roi", Image, queue_size=1)
+        self._pub_result_img = rospy.Publisher("/line_forrower_img", Image, queue_size=1)
         self._pub_cmdvel = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         self._sub_img = rospy.Subscriber("/stereo/csi_cam_0/image_raw", Image, self._img_callback)
@@ -120,6 +118,7 @@ class LineFollower():
         binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
         return binary_img
 
+
     def _update_roi(self, points):
         # 輪郭点をバウンディングボックスで囲む
         try:
@@ -189,6 +188,7 @@ class LineFollower():
         else:
             return contours[biggest_contour_index]
 
+
     def img_processing(self):
         org_img = copy.deepcopy(self._captured_img)
         input_img = copy.deepcopy(org_img)
@@ -211,7 +211,7 @@ class LineFollower():
                 if self._point_of_line_center is not None:
                     result_img = self._draw_result_img(org_img, biggest_contour)
                     # 画像処理結果をパブリッシュ
-                    self._monitor(result_img, self._pub_line_img)
+                    self._monitor(result_img, self._pub_result_img)
                 
 
     def control(self):
