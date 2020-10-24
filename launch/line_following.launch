@@ -1,6 +1,5 @@
 <launch>
   <include file="$(find raspimouse_ros_2)/launch/raspimouse.launch" />
   <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch" />
-  <node pkg="web_video_server" name="web_video_server" type="web_video_server" required="true" />
   <node pkg="jetson_nano_mouse_line_following" name="line_following" type="line_following.py" required="true" output="screen"/>
 </launch>
