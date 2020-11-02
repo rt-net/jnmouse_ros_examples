@@ -20,6 +20,7 @@ import cv2
 import math
 import numpy as np
 import copy
+import rosparam
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -27,10 +28,6 @@ from cv_bridge import CvBridge, CvBridgeError
 class Mouse:
     x = 0
     y = 0
-    point = [0, 0]
-
-    def __init__(self):
-        self.point = [self.x, self.y]
 
 def move_cursor(img, key, mouse):
     if key == ord('h'):
@@ -63,8 +60,9 @@ def move_cursor(img, key, mouse):
 def append_image_points(userdata):
     mouse = userdata['mouse']
     image_points = userdata['image_points']
-    image_point = (mouse.x, mouse.y)
-    image_points.append([image_point])
+    scale = userdata['scale']
+    image_point = [mouse.x/scale, mouse.y/scale]
+    image_points.append(image_point)
     print('image point is: {}'.format(image_points))
 
 
@@ -78,7 +76,8 @@ def mouse_callback(event, x, y, flags, userdata):
         mouse.point = (x, y)
 
     if event == cv2.EVENT_MBUTTONDOWN:
-        append_image_points(image_points, mouse)
+        append_image_points(userdata)
+
     if event == cv2.EVENT_RBUTTONDOWN:
         try:
             image_points.pop()
@@ -97,8 +96,6 @@ class SetImagePoints():
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
 
-        self._pub_result_img = rospy.Publisher("/line_forrower_img", Image, queue_size=1)
-
         self._sub_img = rospy.Subscriber("/stereo/left/image_raw", Image, self._img_callback)
 
 
@@ -109,29 +106,21 @@ class SetImagePoints():
             rospy.logerr(e)
 
 
-    def _monitor(self, img, pub):
-        if img.ndim == 2:
-            pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "mono8"))
-        elif img.ndim == 3:
-            pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "bgr8"))
-        else:
-            pass
-
-
     def img_processing(self, userdata):
         input_img = copy.deepcopy(self._captured_img)
         result_img = input_img
 
-        scale = 1080/input_img.shape[0]
-        scale = 2
 
         if input_img is not None:
+            # 画像を拡大
+            scale = 1080/input_img.shape[0]
             input_img = cv2.resize(input_img, None, fx=scale, fy=scale)
+            userdata['scale'] = scale
             while True:
                 pointed_img = copy.deepcopy(input_img)
                 for image_point in userdata['image_points']:
-                    x = image_point[0][0]
-                    y = image_point[0][1]
+                    x = image_point[0]
+                    y = image_point[1]
                     cv2.circle(pointed_img, (x, y), 3, (0, 0, 255), 1)
                 k = cv2.waitKey(30)
                 move_cursor(pointed_img, k, userdata['mouse'])
@@ -140,19 +129,19 @@ class SetImagePoints():
                 if k == ord('p'):
                     append_image_points(userdata)
                 elif k == ord('q') or k == 27:
+                    # image_pointsをyamlファイルで保存
+                    # roslaunchで起動する場合保存先は"~/.ros"内
+                    rospy.set_param("/image_points", userdata['image_points'])
+                    rosparam.dump_params('image_points.yaml', "/image_points")
+                    image_points = rosparam.load_file('image_points.yaml')
+                    # パノラマ合成に必要なのはimage_points[0][0]のlist
+                    print(image_points[0][0])
                     rospy.signal_shutdown("finished")
                     break
 
-            # 画像処理結果をパブリッシュ
-            self._monitor(result_img, self._pub_result_img)
+                if rospy.is_shutdown():
+                    break
 
-#        # 画像を拡大する
-#        scale = 1080/input_img.shape[0]
-#        scale = 1
-#        input_img = cv2.resize(input_img, None, fx=scale, fy=scale)
-#        userdata = {'mouse': mouse, 'image_points': image_points)
-#        cv2.namedWindow('img', cv2.WINDOW_NOEMAL)
-#        cv2.setMouseCallback('img', mouse_callback, userdata)
 
 if __name__ == '__main__':
     rospy.init_node('set_image_points')
@@ -160,7 +149,8 @@ if __name__ == '__main__':
 
     mouse=Mouse()
     image_points=[]
-    userdata = {'mouse': mouse, 'image_points': image_points}
+    scale=None
+    userdata = {'mouse': mouse, 'image_points': image_points, 'scale': scale}
     cv2.namedWindow('img', cv2.WINDOW_NORMAL)
     cv2.setMouseCallback('img', mouse_callback, userdata)
 

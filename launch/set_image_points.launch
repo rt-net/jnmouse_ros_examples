@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch" />
+  <node pkg="jetson_nano_mouse_line_following" name="set_image_points" type="set_image_points.py" output="screen"/>
+</launch>
