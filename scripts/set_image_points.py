@@ -60,8 +60,7 @@ def move_cursor(img, key, mouse):
 def append_image_points(userdata):
     mouse = userdata['mouse']
     image_points = userdata['image_points']
-    scale = userdata['scale']
-    image_point = [mouse.x/scale, mouse.y/scale]
+    image_point = [mouse.x, mouse.y]
     image_points.append(image_point)
     print('image point is: {}'.format(image_points))
 
@@ -96,7 +95,7 @@ class SetImagePoints():
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
 
-        self._sub_img = rospy.Subscriber("/stereo/left/image_raw", Image, self._img_callback)
+        self._sub_img = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback)
 
 
     def _img_callback(self, img):
@@ -131,9 +130,24 @@ class SetImagePoints():
                 elif k == ord('q') or k == 27:
                     # image_pointsをyamlファイルで保存
                     # roslaunchで起動する場合保存先は"~/.ros"内
-                    rospy.set_param("/image_points", userdata['image_points'])
-                    rosparam.dump_params('image_points.yaml', "/image_points")
-                    image_points = rosparam.load_file('image_points.yaml')
+                    image_points = userdata['image_points']
+
+                    for image_point in image_points:
+                        print("image_point is :{}".format(image_point))
+                        x = image_point[0]
+                        y = image_point[1]
+                        image_point[0] = round(x / scale)
+                        image_point[1] = round(y / scale)
+
+                    rospy.set_param("/image_points", image_points)
+                    camera_position = rospy.get_param("/camera_position")
+                    print(camera_position)
+                    if camera_position == "left":
+                        rosparam.dump_params('image_points_left.yaml', "/image_points")
+                        image_points = rosparam.load_file('image_points_left.yaml')
+                    elif camera_position == "right":
+                        rosparam.dump_params("image_points_right.yaml", "/image_points")
+                        image_points = rosparam.load_file('image_points_right.yaml')
                     # パノラマ合成に必要なのはimage_points[0][0]のlist
                     print(image_points[0][0])
                     rospy.signal_shutdown("finished")
