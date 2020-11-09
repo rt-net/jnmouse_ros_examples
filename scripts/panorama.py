@@ -28,8 +28,8 @@ from cv_bridge import CvBridge, CvBridgeError
 class Panorama():
     def __init__(self):
         self._cv_bridge = CvBridge()
-        self._sub_img_l = None
-        self._sub_img_r = None
+        self._captured_img_l = None
+        self._captured_img_r = None
         self._image_points_l = None
         self._image_points_r = None
 
@@ -54,11 +54,19 @@ class Panorama():
         self._image_points_r = self._image_points_r[0][0]
 
         # 歪み補正後の画像をサブスクライブ
-        self._sub_img_l = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback)
-        self._sub_img_r = rospy.Subscriber("/stereo/right/image_rect", Image, self._img_callback)
+        self._sub_img_l = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback, callback_args=self._captured_img_l)
+        self._sub_img_r = rospy.Subscriber("/stereo/right/image_rect", Image, self._img_callback, callback_args=self._captured_img_r)
         
-        # 画像サイズを保存
-        self._w, self._h = self._sub_img_l.shape[:2]
+        # 画像を取得するまで再帰
+        print(type(self._sub_img_l))
+        while self._captured_img_l == None or self._captured_img_r == None:
+            print("loop")
+            if rospy.is_shutdown():
+                break
+            self.__init__()
+        
+        print("loop out")
+        self._w, self._h = self._captured_img_l.shape[:2]
 
         # 拡張画像用にl, r, t, bを計算
         mag = self._magnification
@@ -77,9 +85,10 @@ class Panorama():
         self._pub_panorama_img = rospy.Publisher("/panorama_img", Image, queue_size=1)
 
 
-    def _img_callback(self, img):
+
+    def _img_callback(self, img, captured_img):
         try:
-            self._captured_img = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
+            captured_img = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
         except CvBridgeError as e:
             rospy.logerr(e)
 
