@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find raspimouse_ros_2)/launch/raspimouse.launch" />
+  <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch" />
+  <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch" />
+    <param name="approximate_sync" value="true"/>
+    <param name="queue_size" value="100"/>
+  <node pkg="jetson_nano_mouse_line_following" name="panorama" type="panorama.py" output="screen"/>
+</launch>
