@@ -28,8 +28,8 @@ from cv_bridge import CvBridge, CvBridgeError
 class Panorama():
     def __init__(self):
         self._cv_bridge = CvBridge()
-        self._captured_img_l = None
-        self._captured_img_r = None
+        self._captured_img_l = np.empty(0)
+        self._captured_img_r = np.empty(0)
         self._image_points_l = None
         self._image_points_r = None
 
@@ -50,23 +50,28 @@ class Panorama():
         # image_pointsをロード
         self._image_points_l = rosparam.load_file('image_points_left.yaml')
         self._image_points_r = rosparam.load_file('image_points_right.yaml')
+
         self._image_points_l = self._image_points_l[0][0]
         self._image_points_r = self._image_points_r[0][0]
 
+        self._image_points_l = np.array(self._image_points_l)
+        self._image_points_r = np.array(self._image_points_r)
+
+        self._image_points_l = self._image_points_l.reshape(30, 1, 2)
+        self._image_points_r = self._image_points_r.reshape(30, 1, 2)
+        
+
         # 歪み補正後の画像をサブスクライブ
-        self._sub_img_l = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback, callback_args=self._captured_img_l)
-        self._sub_img_r = rospy.Subscriber("/stereo/right/image_rect", Image, self._img_callback, callback_args=self._captured_img_r)
+        self._sub_img_l = rospy.Subscriber("/left/image_rect", Image, self._img_callback, callback_args="left")
+        self._sub_img_r = rospy.Subscriber("/right/image_rect", Image, self._img_callback, callback_args="right")
         
         # 画像を取得するまで再帰
-        print(type(self._sub_img_l))
-        while self._captured_img_l == None or self._captured_img_r == None:
-            print("loop")
+        while self._captured_img_l.ndim != 3 or self._captured_img_r.ndim != 3:
             if rospy.is_shutdown():
                 break
             self.__init__()
         
-        print("loop out")
-        self._w, self._h = self._captured_img_l.shape[:2]
+        self._h, self._w = self._captured_img_l.shape[:2]
 
         # 拡張画像用にl, r, t, bを計算
         mag = self._magnification
@@ -86,9 +91,13 @@ class Panorama():
 
 
 
-    def _img_callback(self, img, captured_img):
+    def _img_callback(self, img, position):
         try:
-            captured_img = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
+            if position == "left":
+                self._captured_img_l = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
+            elif position == "right":
+                self._captured_img_r = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
+
         except CvBridgeError as e:
             rospy.logerr(e)
 
@@ -103,7 +112,7 @@ class Panorama():
 
 
     # パノラマ用に拡張した画像を作成
-    def create_ex_img(self, img_l, img_r):
+    def _create_ex_img(self, img_l, img_r):
         h = self._h
         w = self._w
         mag = self._magnification
@@ -126,31 +135,33 @@ class Panorama():
         return expanded_img_l, expanded_img_r
 
 
-    def create_panorama_img(self, ex_img_l, ex_img_r):
-        ex_h, ex_w = ex_img.shape[:2]
+    def _create_panorama_img(self, ex_img_l, ex_img_r):
+        ex_h, ex_w = ex_img_l.shape[:2]
         l = self._left
         r = self._right
         t = self._top
         b = self._bottom
         ex_range = self._expand_range
 
+        self._image_points_r = self._image_points_r.reshape(30, 1, 2)
+
         H, mask = cv2.findHomography(self._image_points_l, self._image_points_r, 0)
 
-        warped_img_l = cv2.warpPerspective(ex_img_l, H, (ex_w, ex_h), borderValur=(255,255,255))
-        panorama_img = copy_deepcopy(ex_img_r)
+        warped_img_l = cv2.warpPerspective(ex_img_l, H, (ex_w, ex_h), borderValue=(255,255,255))
+        panorama_img = copy.deepcopy(ex_img_r)
         panorama_img[:, :l+ex_range] = warped_img_l[:, :l+ex_range]
-        panorama_img = ret[t:b, :r]
+        panorama_img = panorama_img[t:b, :r]
 
         return panorama_img
 
 
     # メイン部分
     def img_processing(self):
-        org_img_l = copy.deepcopy(self._sub_img_l)
-        org_img_r = copy.deepcopy(self._sub_img_r)
+        org_img_l = copy.deepcopy(self._captured_img_l)
+        org_img_r = copy.deepcopy(self._captured_img_r)
         
-        ex_img_l, ex_img_r = create_ex_img(org_img_l, org_img_r)
-        pano_img = create_panorama_img(ex_img_l, ex_img_r)
+        ex_img_l, ex_img_r = self._create_ex_img(org_img_l, org_img_r)
+        pano_img = self._create_panorama_img(ex_img_l, ex_img_r)
 
         self._monitor(pano_img, self._pub_panorama_img)
 
