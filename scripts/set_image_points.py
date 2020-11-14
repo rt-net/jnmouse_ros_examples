@@ -94,8 +94,12 @@ class SetImagePoints():
         # ROI更新時の拡張サイズ指定（単位: pixel）
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
+        camera_position = rospy.get_param("/camera_position")
 
-        self._sub_img = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback)
+        if camera_position == "left":
+            self._sub_img = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback)
+        elif camera_position == "right":
+            self._sub_img = rospy.Subscriber("/stereo/right/image_rect", Image, self._img_callback)
 
 
     def _img_callback(self, img):
@@ -141,7 +145,6 @@ class SetImagePoints():
 
                     rospy.set_param("/image_points", image_points)
                     camera_position = rospy.get_param("/camera_position")
-                    print(camera_position)
                     if camera_position == "left":
                         rosparam.dump_params('image_points_left.yaml', "/image_points")
                         image_points = rosparam.load_file('image_points_left.yaml')
