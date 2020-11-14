@@ -36,7 +36,7 @@ class LineFollower():
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
 
-        self._pub_result_img = rospy.Publisher("/line_forrower_img", Image, queue_size=1)
+        self._pub_result_img = rospy.Publisher("/line_follower_img", Image, queue_size=1)
         self._pub_cmdvel = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         self._sub_img = rospy.Subscriber("/stereo/csi_cam_0/image_raw", Image, self._img_callback)
