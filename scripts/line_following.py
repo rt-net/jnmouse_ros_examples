@@ -39,7 +39,7 @@ class LineFollower():
         self._pub_result_img = rospy.Publisher("/line_follower_img", Image, queue_size=1)
         self._pub_cmdvel = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
-        self._sub_img = rospy.Subscriber("/stereo/csi_cam_0/image_raw", Image, self._img_callback)
+        self._sub_img = rospy.Subscriber("/csi_cam_0/image_raw", Image, self._img_callback)
 
         rospy.wait_for_service("/motor_on")
         rospy.wait_for_service("/motor_off")
