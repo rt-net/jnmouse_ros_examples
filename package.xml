@@ -1,20 +1,21 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>jetson_nano_mouse_line_following</name>
+  <name>jnmouse_ros_examples</name>
   <version>0.0.1</version>
-  <description>The jetson_nano_mouse_line_trace package</description>
-  <maintainer email="takuminpc@gmail.com">tentenNT</maintainer>
-  <license>Apache License 2.0</license>
+  <description>ROS examples for Jetson Nano Mouse</description>
+  <maintainer email="support@rt-net.jp">RT Corporation</maintainer>
+  <author email="takuminpc@gmail.com">tentenNT</author>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roslint</build_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>std_srvs</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>raspimouse_ros_2</exec_depend>
-  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>jetson_nano_csi_cam</exec_depend>
   <export>
   </export>
 
