@@ -53,18 +53,19 @@ source devel/setup.bash
 次のコマンドでノードを起動します。
 
 ```sh
-roslaunch jetson_nano_mouse_line_tracing line_tracing.launch
+roslaunch jnmouse_ros_examples line_following.launch
 ```
 
 ライントレースのコース上で実行すればJetson Nano Mouseがコースに沿って移動します。
-実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます。
 
+実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます。  
 リモートでrqt_image_viewなどを使用すれば、実際にどのラインを検出しているのかが分かるようになっています。
 
 ```sh
 rqt_image_view
 ```
 
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_line_follwing_screenshot.png)
 
 ## ライセンス
 
