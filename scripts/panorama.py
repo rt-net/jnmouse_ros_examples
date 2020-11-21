@@ -88,6 +88,8 @@ class Panorama():
 
         # パノラマ画像をパブリッシュ
         self._pub_panorama_img = rospy.Publisher("/panorama_img", Image, queue_size=1)
+        self._pub_right_img = rospy.Publisher("/right_img", Image, queue_size=1)
+        self._pub_warped_img = rospy.Publisher("/warped_img", Image, queue_size=1)
 
 
 
@@ -135,6 +137,20 @@ class Panorama():
         return expanded_img_l, expanded_img_r
 
 
+    # image_pointsをパノラマ画像の座標に移す
+    def _trans_image_points(self, image_points):
+        image_points = copy.deepcopy(image_points)
+        l = self._left
+        r = self._right
+        t = self._top
+        b = self._bottom
+
+        image_points[:, :, 0] = image_points[:, :, 0] + l
+        image_points[:, :, 1] = image_points[:, :, 1] + t
+
+        return image_points
+
+
     def _create_panorama_img(self, ex_img_l, ex_img_r):
         ex_h, ex_w = ex_img_l.shape[:2]
         l = self._left
@@ -142,15 +158,18 @@ class Panorama():
         t = self._top
         b = self._bottom
         ex_range = self._expand_range
+        img_points_l = self._trans_image_points(self._image_points_l)
+        img_points_r = self._trans_image_points(self._image_points_r)
 
-        self._image_points_r = self._image_points_r.reshape(30, 1, 2)
-
-        H, mask = cv2.findHomography(self._image_points_l, self._image_points_r, 0)
+        H, mask = cv2.findHomography(img_points_l, img_points_r, 0)
 
         warped_img_l = cv2.warpPerspective(ex_img_l, H, (ex_w, ex_h), borderValue=(255,255,255))
         panorama_img = copy.deepcopy(ex_img_r)
         panorama_img[:, :l+ex_range] = warped_img_l[:, :l+ex_range]
         panorama_img = panorama_img[t:b, :r]
+
+        self._monitor(ex_img_r, self._pub_right_img)
+        self._monitor(warped_img_l, self._pub_warped_img)
 
         return panorama_img
 
