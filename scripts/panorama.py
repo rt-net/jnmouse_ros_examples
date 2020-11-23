@@ -86,7 +86,21 @@ class Panorama():
         self._top = margin_h # 元画像の上端
         self._bottom = margin_h + h # 元画像の下端
 
-        # パノラマ画像をパブリッシュ
+        # ホモグラフィを計算
+        ex_range = self._expand_range
+        pano_img_points_l = self._trans_image_points(self._image_points_l)
+        pano_img_points_r = self._trans_image_points(self._image_points_r)
+
+        H, mask = cv2.findHomography(pano_img_points_l, pano_img_points_r, 0)
+
+        self._H = H
+
+        # CUDA用
+        
+        self._img_gpu_src = cv2.cuda_GpuMat()
+        self._img_gpu_dst = cv2.cuda_GpuMat()
+
+        # パブリッシュ
         self._pub_panorama_img = rospy.Publisher("/panorama_img", Image, queue_size=1)
         self._pub_right_img = rospy.Publisher("/right_img", Image, queue_size=1)
         self._pub_warped_img = rospy.Publisher("/warped_img", Image, queue_size=1)
@@ -151,33 +165,33 @@ class Panorama():
         return image_points
 
 
+    # パノラマ画像の作成
     def _create_panorama_img(self, ex_img_l, ex_img_r):
-        ex_h, ex_w = ex_img_l.shape[:2]
         l = self._left
         r = self._right
         t = self._top
         b = self._bottom
+        H = self._H
         ex_range = self._expand_range
-        img_points_l = self._trans_image_points(self._image_points_l)
-        img_points_r = self._trans_image_points(self._image_points_r)
 
-        H, mask = cv2.findHomography(img_points_l, img_points_r, 0)
+        ex_h, ex_w = ex_img_l.shape[:2]
 
-        warped_img_l = cv2.warpPerspective(ex_img_l, H, (ex_w, ex_h), borderValue=(255,255,255))
-        panorama_img = copy.deepcopy(ex_img_r)
+        # 左画像を射影変換
+        self._img_gpu_src.upload(ex_img_l)
+        self._img_gpu_dst = cv2.cuda.warpPerspective(self._img_gpu_src , H, (ex_w, ex_h), borderValue=(255,255,255))
+        warped_img_l = self._img_gpu_dst.download()
+
+        panorama_img = ex_img_r
         panorama_img[:, :l+ex_range] = warped_img_l[:, :l+ex_range]
         panorama_img = panorama_img[t:b, :r]
-
-        self._monitor(ex_img_r, self._pub_right_img)
-        self._monitor(warped_img_l, self._pub_warped_img)
 
         return panorama_img
 
 
     # メイン部分
     def img_processing(self):
-        org_img_l = copy.deepcopy(self._captured_img_l)
-        org_img_r = copy.deepcopy(self._captured_img_r)
+        org_img_l = self._captured_img_l
+        org_img_r = self._captured_img_r
         
         ex_img_l, ex_img_r = self._create_ex_img(org_img_l, org_img_r)
         pano_img = self._create_panorama_img(ex_img_l, ex_img_r)
@@ -186,10 +200,10 @@ class Panorama():
 
 
 if __name__ == '__main__':
-    rospy.init_node('set_image_points')
+    rospy.init_node('stereo_line_tracing')
     p = Panorama()
 
-    rate = rospy.Rate(60)
+    rate = rospy.Rate(20)
     rate.sleep()
     while not rospy.is_shutdown():
         p.img_processing()
