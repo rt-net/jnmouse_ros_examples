@@ -21,6 +21,7 @@ import math
 import numpy as np
 import copy
 import rosparam
+import message_filters
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -64,27 +65,8 @@ class Panorama():
         # 歪み補正後の画像をサブスクライブ
         self._sub_img_l = rospy.Subscriber("/left/image_rect", Image, self._img_callback, callback_args="left")
         self._sub_img_r = rospy.Subscriber("/right/image_rect", Image, self._img_callback, callback_args="right")
+
         
-        # 画像を取得するまで再帰
-        while self._captured_img_l.ndim != 3 or self._captured_img_r.ndim != 3:
-            if rospy.is_shutdown():
-                break
-            self.__init__()
-        
-        self._h, self._w = self._captured_img_l.shape[:2]
-
-        # 拡張画像用にl, r, t, bを計算
-        mag = self._magnification
-        h = self._h
-        w = self._w
-
-        margin_h = int((mag -1)*0.5*h)
-        margin_w = int((mag -1)*0.5*w)
-
-        self._left = margin_w # 元画像の左端
-        self._right = margin_w + w # 元画像の右端
-        self._top = margin_h # 元画像の上端
-        self._bottom = margin_h + h # 元画像の下端
 
         # ホモグラフィを計算
         ex_range = self._expand_range
@@ -96,7 +78,6 @@ class Panorama():
         self._H = H
 
         # CUDA用
-        
         self._img_gpu_src = cv2.cuda_GpuMat()
         self._img_gpu_dst = cv2.cuda_GpuMat()
 
@@ -188,8 +169,28 @@ class Panorama():
         return panorama_img
 
 
+    def _calc_params(self):
+        self._h, self._w = self._captured_img_l.shape[:2]
+
+        # 拡張画像用にl, r, t, bを計算
+        mag = self._magnification
+        h = self._h
+        w = self._w
+
+        margin_h = int((mag -1)*0.5*h)
+        margin_w = int((mag -1)*0.5*w)
+
+        self._left = margin_w # 元画像の左端
+        self._right = margin_w + w # 元画像の右端
+        self._top = margin_h # 元画像の上端
+        self._bottom = margin_h + h # 元画像の下端
+
+
     # メイン部分
-    def img_processing(self):
+    def img_processing_callback(self, sub_img_l, sub_img_r):
+        self._captured_img_l = self._cv_bridge.imgmsg_to_cv2(sub_img_l, "bgr8")
+        self._captured_img_r = self._cv_bridge.imgmsg_to_cv2(sub_img_r, "bgr8")
+        self._calc_params()
         org_img_l = self._captured_img_l
         org_img_r = self._captured_img_r
         
@@ -203,8 +204,12 @@ if __name__ == '__main__':
     rospy.init_node('stereo_line_tracing')
     p = Panorama()
 
-    rate = rospy.Rate(20)
-    rate.sleep()
-    while not rospy.is_shutdown():
-        p.img_processing()
-        rate.sleep()
+    # タイムスタンプによる左右画像の同期
+    sub_img_l = message_filters.Subscriber("/left/image_rect", Image)
+    sub_img_r = message_filters.Subscriber("/right/image_rect", Image)
+
+    ts = message_filters.ApproximateTimeSynchronizer([sub_img_l, sub_img_r], 1, 0.05)
+
+    ts.registerCallback(p.img_processing_callback)
+
+    rospy.spin()
