@@ -29,8 +29,8 @@ from cv_bridge import CvBridge, CvBridgeError
 class Panorama():
     def __init__(self):
         self._cv_bridge = CvBridge()
-        self._captured_img_l = np.empty(0)
-        self._captured_img_r = np.empty(0)
+        self._captured_img_l = np.zeros(1)
+        self._captured_img_r = np.zeros(1)
         self._image_points_l = None
         self._image_points_r = None
 
@@ -43,7 +43,7 @@ class Panorama():
 
         # 元画像より大きな白一色の画像を作成し，その上に元画像を重ねることでパノラマ化
         # 拡張画像の倍率
-        self._magnification = 1.5
+        self._magnification = 1.8
 
         # パノラマとして使用する左画像の範囲[pixel]
         self._expand_range = 50
@@ -61,14 +61,13 @@ class Panorama():
         self._image_points_l = self._image_points_l.reshape(30, 1, 2)
         self._image_points_r = self._image_points_r.reshape(30, 1, 2)
         
-
         # 歪み補正後の画像をサブスクライブ
         self._sub_img_l = rospy.Subscriber("/left/image_rect", Image, self._img_callback, callback_args="left")
         self._sub_img_r = rospy.Subscriber("/right/image_rect", Image, self._img_callback, callback_args="right")
 
-        
 
         # ホモグラフィを計算
+        self._calc_params()
         ex_range = self._expand_range
         pano_img_points_l = self._trans_image_points(self._image_points_l)
         pano_img_points_r = self._trans_image_points(self._image_points_r)
@@ -134,16 +133,16 @@ class Panorama():
 
     # image_pointsをパノラマ画像の座標に移す
     def _trans_image_points(self, image_points):
-        image_points = copy.deepcopy(image_points)
+        ex_image_points = copy.deepcopy(image_points)
         l = self._left
         r = self._right
         t = self._top
         b = self._bottom
 
-        image_points[:, :, 0] = image_points[:, :, 0] + l
-        image_points[:, :, 1] = image_points[:, :, 1] + t
-
-        return image_points
+        ex_image_points[:, :, 0] = image_points[:, :, 0] + l
+        ex_image_points[:, :, 1] = image_points[:, :, 1] + t
+    
+        return ex_image_points
 
 
     # パノラマ画像の作成
@@ -170,8 +169,9 @@ class Panorama():
 
 
     def _calc_params(self):
-        self._h, self._w = self._captured_img_l.shape[:2]
-
+        self._h = rospy.get_param("/left/image_height")
+        self._w = rospy.get_param("/left/image_width")
+            
         # 拡張画像用にl, r, t, bを計算
         mag = self._magnification
         h = self._h
