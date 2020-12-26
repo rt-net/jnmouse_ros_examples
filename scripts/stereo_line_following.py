@@ -20,6 +20,7 @@ import cv2
 import math
 import numpy as np
 import copy
+import time 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Twist
@@ -241,6 +242,7 @@ class LineFollower():
                 self._monitor(result_img, self._pub_result_img)
                 self._update_roi()
             else:
+                time.sleep(1)
                 self.img_processing()
                 
 
