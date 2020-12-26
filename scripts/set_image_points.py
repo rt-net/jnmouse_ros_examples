@@ -29,6 +29,8 @@ class Mouse:
     x = 0
     y = 0
 
+
+# GUI上でのカーソル移動と描画を定義
 def move_cursor(img, key, mouse):
     if key == ord('h'):
         mouse.x -= 1
@@ -57,6 +59,7 @@ def move_cursor(img, key, mouse):
     cv2.line(img, (mouse.x, 0), (mouse.x,img.shape[0]), (0, 255, 0))
 
 
+# 画像特徴点の追加用
 def append_image_points(userdata):
     mouse = userdata['mouse']
     image_points = userdata['image_points']
@@ -65,6 +68,10 @@ def append_image_points(userdata):
     print('image point is: {}'.format(image_points))
 
 
+# マウスクリック時のコールバック関数
+# 左クリックでカーソル移動
+# 中クリックで現在のカーソル位置を画像特徴点として追加
+# 右クリックで最後に追加した画像特徴点の削除
 def mouse_callback(event, x, y, flags, userdata):
     mouse = userdata['mouse']
     image_points = userdata['image_points']
@@ -97,11 +104,13 @@ class SetImagePoints():
         camera_position = rospy.get_param("/camera_position")
 
         if camera_position == "left":
-            self._sub_img = rospy.Subscriber("/stereo/left/image_rect", Image, self._img_callback)
+            self._sub_img = rospy.Subscriber("/left/image_rect", Image, self._img_callback)
         elif camera_position == "right":
-            self._sub_img = rospy.Subscriber("/stereo/right/image_rect", Image, self._img_callback)
+            self._sub_img = rospy.Subscriber("/right/image_rect", Image, self._img_callback)
 
 
+    # 画像取得用のコールバック関数
+    # _cv_bridge.imgmsg_to_cv2の返り値はnumpy.array型（OpenCVにおける画像形式）
     def _img_callback(self, img):
         try:
             self._captured_img = self._cv_bridge.imgmsg_to_cv2(img, "bgr8")
@@ -109,13 +118,13 @@ class SetImagePoints():
             rospy.logerr(e)
 
 
+    # メイン部分
     def img_processing(self, userdata):
         input_img = copy.deepcopy(self._captured_img)
         result_img = input_img
 
-
         if input_img is not None:
-            # 画像を拡大
+            # 作業しやすくするために画像を拡大
             scale = 1080/input_img.shape[0]
             input_img = cv2.resize(input_img, None, fx=scale, fy=scale)
             userdata['scale'] = scale
@@ -129,8 +138,11 @@ class SetImagePoints():
                 move_cursor(pointed_img, k, userdata['mouse'])
                 cv2.imshow('img', pointed_img)
 
+                # pキーでカーソル位置を画像特徴点として追加
                 if k == ord('p'):
                     append_image_points(userdata)
+
+                # qキーで終了
                 elif k == ord('q') or k == 27:
                     # image_pointsをyamlファイルで保存
                     # roslaunchで起動する場合保存先は"~/.ros"内

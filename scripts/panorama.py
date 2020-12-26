@@ -80,13 +80,14 @@ class Panorama():
         self._img_gpu_src = cv2.cuda_GpuMat()
         self._img_gpu_dst = cv2.cuda_GpuMat()
 
-        # パブリッシュ
+        # パブリッシャの作成
         self._pub_panorama_img = rospy.Publisher("/panorama_img", Image, queue_size=1)
         self._pub_right_img = rospy.Publisher("/right_img", Image, queue_size=1)
         self._pub_warped_img = rospy.Publisher("/warped_img", Image, queue_size=1)
 
 
-
+    # サブスクライバ用のコールバック関数 
+    # _cv_bridge.imgmsg_to_cv2()の返り値はnumpy.array（OpenCVの画像形式）
     def _img_callback(self, img, position):
         try:
             if position == "left":
@@ -98,6 +99,7 @@ class Panorama():
             rospy.logerr(e)
 
 
+    # 画像のパブリッシュ用
     def _monitor(self, img, pub):
         if img.ndim == 2:
             pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "mono8"))
@@ -107,7 +109,25 @@ class Panorama():
             pass
 
 
-    # パノラマ用に拡張した画像を作成
+    def _calc_params(self):
+        self._h = rospy.get_param("/left/image_height")
+        self._w = rospy.get_param("/left/image_width")
+            
+        # 拡張画像用にl, r, t, bを計算
+        mag = self._magnification
+        h = self._h
+        w = self._w
+
+        margin_h = int((mag -1)*0.5*h)
+        margin_w = int((mag -1)*0.5*w)
+
+        self._left = margin_w # 元画像の左端
+        self._right = margin_w + w # 元画像の右端
+        self._top = margin_h # 元画像の上端
+        self._bottom = margin_h + h # 元画像の下端
+
+
+    # パノラマ画像の下地となるサイズを拡張した画像を作成
     def _create_ex_img(self, img_l, img_r):
         h = self._h
         w = self._w
@@ -156,34 +176,17 @@ class Panorama():
 
         ex_h, ex_w = ex_img_l.shape[:2]
 
-        # 左画像を射影変換
+        # 左画像をホモグラフィ行列を用いて射影変換(CUDA)
         self._img_gpu_src.upload(ex_img_l)
         self._img_gpu_dst = cv2.cuda.warpPerspective(self._img_gpu_src , H, (ex_w, ex_h), borderValue=(255,255,255))
         warped_img_l = self._img_gpu_dst.download()
 
+        # 右画像を下地に，変換された左画像を追加してパノラマ画像化
         panorama_img = ex_img_r
         panorama_img[:, :l+ex_range] = warped_img_l[:, :l+ex_range]
         panorama_img = panorama_img[t:b, :r]
 
         return panorama_img
-
-
-    def _calc_params(self):
-        self._h = rospy.get_param("/left/image_height")
-        self._w = rospy.get_param("/left/image_width")
-            
-        # 拡張画像用にl, r, t, bを計算
-        mag = self._magnification
-        h = self._h
-        w = self._w
-
-        margin_h = int((mag -1)*0.5*h)
-        margin_w = int((mag -1)*0.5*w)
-
-        self._left = margin_w # 元画像の左端
-        self._right = margin_w + w # 元画像の右端
-        self._top = margin_h # 元画像の上端
-        self._bottom = margin_h + h # 元画像の下端
 
 
     # メイン部分
