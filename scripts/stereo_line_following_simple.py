@@ -87,7 +87,7 @@ class LineFollower():
 
     def _rotation_velocity(self):
         # Z軸回転速度の係数
-        VELOCITY = 0.75 * math.pi
+        VELOCITY = 0.75 * math.pi * 1.5
         if self._point_of_line_center is None:
             return 0.0
         
@@ -100,7 +100,6 @@ class LineFollower():
 
     def _extract_line_in_binary(self, cv_img):
         if cv_img is None:
-            #print("none")
             return None
         # しきい値処理用の輝度値
         max_value = 100;
@@ -136,7 +135,7 @@ class LineFollower():
         # 最初は適当にROIを決定する
         if self._roi == None:
             centor = binary_img.shape[1]//2
-            self._roi = (centor-100, centor+100)
+            self._roi = (centor-200, centor+200)
         roi_left, roi_right = self._roi
         scanning_line = binary_img[scanning_h, roi_left:roi_right]
         i = 0
@@ -165,11 +164,15 @@ class LineFollower():
 
         widest_line_index = self.calc_widest_line(cl_list)
         if cl_list != []:
+            # roi_leftの分だけ座標変換
             widest_line = cl_list[widest_line_index]
+            left = widest_line.left + roi_left
+            right = widest_line.right + roi_left
+            widest_line = CourceLine(left, right)
+
             if self._roi != None:
-                left, right = self._roi
-                widest_line.left += roi_left 
-                widest_line.right += roi_right
+                print("roi_left: {}".format(roi_left))
+                print("roi_right: {}".format(roi_right))
         else:
             widest_line = None
 
@@ -191,7 +194,6 @@ class LineFollower():
 
 
     def _update_roi(self):
-        # バウンディングボックスの点+self._expand_rangeの範囲を新たなROIとする
         cl = self._widest_line
         ex = self._expand_range
         roi_left = cl.left-ex
@@ -223,13 +225,12 @@ class LineFollower():
             self._widest_line, scanning_h = self._extract_line_center(binary_line_img) 
 
             if self._widest_line != None:
-
                 # ラインの中央を検出
                 self._point_of_line_center = (self._widest_line.center, scanning_h)
                 result_img = self._draw_result_img(org_img)
+                print("widest_line_center: {}".format(self._widest_line.center))
                 # 画像処理結果をパブリッシュ
                 self._monitor(result_img, self._pub_result_img)
-
                 self._update_roi()
             else:
                 self.img_processing()
