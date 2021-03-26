@@ -16,6 +16,7 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>jetson_nano_csi_cam</exec_depend>
+  <exec_depend>stereo_image_proc</exec_depend>
   <export>
   </export>
 
