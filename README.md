@@ -37,6 +37,7 @@ git clone https://github.com/rt-net/jnmouse_ros_examples.git
 
 # Install dependencies
 rosdep install -r -y -i --from-paths .
+sudo apt install libcanberra-gtk-dev
 
 # make & install
 cd ~/catkin_ws && catkin build
@@ -53,68 +54,68 @@ source devel/setup.bash
 次のコマンドでノードを起動します。
 
 ```sh
-roslaunch jetson_nano_mouse_line_tracing line_tracing.launch
+roslaunch jnmouse_ros_examples line_following.launch
 ```
 
 ライントレースのコース上で実行すればJetson Nano Mouseがコースに沿って移動します。
-実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます。
 
+実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます。  
 リモートでrqt_image_viewなどを使用すれば、実際にどのラインを検出しているのかが分かるようになっています。
 
 ```sh
 rqt_image_view
 ```
 
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_line_follwing_screenshot.png)
 
-## How To Use Example
 ### stereo_line_following
 
-左右カメラからパノラマ画像を作成し，ライントレースを行うコード例です．
+左右カメラからパノラマ画像を作成し、ライントレースを行うコード例です。
 
 #### How to use
 ##### set_image_points 
-最初にパノラマ画像作成のため，左右画像間で共通する特徴点の位置を記録します．
+最初にパノラマ画像作成のため、左右画像間で共通する特徴点の位置を記録します。
 
 Jetson Nano Mouseの左右カメラから見える位置にチェッカーパターンを印刷した紙を
-ライントレースのコース上に置いて下さい．
+ライントレースのコース上に置いて下さい。
 
-左カメラ画像上での特徴点を記録するため，次のコマンドでノードを起動します。
-左右カメラそれぞれで画像特徴点の記録が完了するまで，機体やチェッカーパターンが動かないように注意して下さい．
-
-```sh
-roslaunch jetson_nano_mouse_line_tracing set_image_points.launch camera_position:=left
-```
-
-hjklキー，または左クリックでカーソル移動，
-pキー，または中クリックで特徴点を設定，
-右クリックで最後に記録した特徴点の削除，
-qキーで終了します．
-
-チェッカーパターンの格子点にカーソルを合わせたら，pキーまたは中クリックで特徴点を設定します．
-特徴点の設定順は左右カメラで同じ順番であれば問題ありませんが，左上から順に行うのが良いと思います．
-
-同様に右カメラ画像上での特徴点を記録するため，次のコマンドでノードを起動します。
+左カメラ画像上での特徴点を記録するため、次のコマンドでノードを起動します。
+左右カメラそれぞれで画像特徴点の記録が完了するまで、機体やチェッカーパターンが動かないように注意して下さい。
 
 ```sh
 roslaunch jetson_nano_mouse_line_tracing set_image_points.launch camera_position:=left
 ```
 
+hjklキー、または左クリックでカーソル移動、
+pキー、または中クリックで特徴点を設定、
+右クリックで最後に記録した特徴点の削除、
+qキーで終了します。
 
-左右カメラで特徴点の記録が完了したら，機体やチェッカーパターンを動かしても大丈夫です．
-一連の操作によって左右画像間での特徴点の対応づけが完了し，パノラマ画像作成に必要なホモグラフィ行列の推定が可能となりました．
+チェッカーパターンの格子点にカーソルを合わせたら、pキーまたは中クリックで特徴点を設定します。
+特徴点の設定順は左右カメラで同じ順番であれば問題ありませんが、左上から順に行うのが良いと思います。
+
+同様に右カメラ画像上での特徴点を記録するため、次のコマンドでノードを起動します。
+
+```sh
+roslaunch jetson_nano_mouse_line_tracing set_image_points.launch camera_position:=left
+```
+
+
+左右カメラで特徴点の記録が完了したら、機体やチェッカーパターンを動かしても大丈夫です。
+一連の操作によって左右画像間での特徴点の対応づけが完了し、パノラマ画像作成に必要なホモグラフィ行列の推定が可能となりました。
 
 ##### stereo_line_following
 
 次のコマンドでノードを起動します。
 
 ```sh
-roslaunch jetson_nano_mouse_line_tracing line_tracing.launch
+roslaunch jetson_nano_mouse_line_tracing panorama.launch
 ```
 
-ライントレースのコース上で実行すればJetson Nano Mouseがコースに沿って移動します．
-実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます．
+ライントレースのコース上で実行すればJetson Nano Mouseがコースに沿って移動します。
+実行中は/line_follower_imgに追跡中のラインを示す画像が配信されます。
 
-リモートでrqt_image_viewなどを使用すれば，実際にどのラインを検出しているのかが分かるようになっています．
+リモートでrqt_image_viewなどを使用すれば、実際にどのラインを検出しているのかが分かるようになっています。
 
 ```
 rqt_image_view
