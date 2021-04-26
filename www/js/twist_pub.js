@@ -25,18 +25,9 @@
 var yaw = 0;
 var vel = 0;
 
-var url = new URL(window.location.href);
-var params = url.searchParams;
-var port_8080 = params.get('port_8080');
-var port_9090 = params.get('port_9090');
-console.log(port_8080)
-console.log(port_9090)
-if (port_8080 == null) port_8080 = location.hostname + ':8080'
-if (port_9090 == null) port_9090 = 'ws://' + location.hostname + ':9090'
-
 //ROS
 var ros = new ROSLIB.Ros({
-  url: port_9090
+  url: 'ws://' + location.hostname + ':9090'
 });
 
 ros.on('connection', function() {
