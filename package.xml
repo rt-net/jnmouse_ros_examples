@@ -11,11 +11,15 @@
   <build_depend>roslint</build_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>jetson_nano_csi_cam</exec_depend>
   <exec_depend>raspimouse_ros_2</exec_depend>
+  <exec_depend>ros_bridge_server</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>roswww</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-  <exec_depend>jetson_nano_csi_cam</exec_depend>
+  <exec_depend>web_video_server</exec_depend>
   <export>
   </export>
 
