@@ -3,7 +3,6 @@
 
   <arg name="width" default="320" />
   <arg name="height" default="180" />
-  <arg name="external_ws_port" default="9090" />
 
   <!-- robot control nodes -->
   <arg name="initial_motor_power" default="off" />
@@ -17,10 +16,7 @@
   <include file="$(find roswww)/launch/roswww.launch" />
 
   <!-- rosbridge server -->
-  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" >
-    <arg name="port" value="9090" />
-    <arg name="websocket_external_port" value="$(arg external_ws_port)" />
-  </include>
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
 
   <!-- stream camera image -->
   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
