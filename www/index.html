@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <title>ROS Image Web Viewer</title>  
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css?family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
+  </head>
+
+  <body>
+    <script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+    <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+    <div class='vr_view'>
+      <script src="js/twist_pub.js"></script>
+      <script src="js/image_sub.js"></script>
+      <div class='buttons_l'>
+        <button onclick="location.reload()">更新</button>
+        <!--
+        <button onclick="tilt();">角度取得</button>
+        -->
+        <button id="forward">前</button>
+        <button id="backward">後</button>
+      </div>
+      <div class='buttons_r'>
+        <button id="left">左</button>
+        <button id="right">右</button>
+      </div>
+      <script src="js/vel_button.js"></script>
+    </div>
+  </body>
+</html>
+
+
+<!-- 
+ * Copyright 2020-2021 RT Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<!-- 
+  謝辞
+  ROS講座62を参考にしています
+  https://qiita.com/srs/items/7f86c56d0005184dcbc0
+-->

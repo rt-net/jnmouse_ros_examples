@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="width" default="320" />
+  <arg name="height" default="180" />
+  <arg name="external_ws_port" default="9090" />
+
+  <!-- robot control nodes -->
+  <arg name="initial_motor_power" default="off" />
+  <node pkg="raspimouse_ros_2" name="motors" type="motors" required="true"
+    output="screen" args="$(arg initial_motor_power)" />
+  <node pkg="raspimouse_ros_2" name="buzzer" type="buzzer.py" required="true" />
+  <node pkg="raspimouse_ros_2" name="leds" type="leds" required="true" />
+  <node pkg="raspimouse_ros_2" name="buttons" type="buttons" required="true" />
+
+  <!-- HTTP web server -->
+  <include file="$(find roswww)/launch/roswww.launch" />
+
+  <!-- rosbridge server -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" >
+    <arg name="port" value="9090" />
+    <arg name="websocket_external_port" value="$(arg external_ws_port)" />
+  </include>
+
+  <!-- stream camera image -->
+  <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
+
+  <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch">
+    <param name="width" value="$(arg width)" />
+    <param name="height" value="$(arg height)" />
+  </include>
+  <node name="image_republish_l" pkg="image_transport" type="republish" args="raw compressed">
+    <remap from="in" to="/csi_cam_0/image_raw" />
+    <remap from="out" to="/csi_cam_0/image_raw" />
+  </node>
+  <node name="image_republish_r" pkg="image_transport" type="republish" args="raw compressed">
+    <remap from="in" to="/csi_cam_1/image_raw" />
+    <remap from="out" to="/csi_cam_1/image_raw" />
+  </node>
+</launch>
