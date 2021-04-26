@@ -14,6 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 並進速度 (m/s)
+var linear_speed = 0.1;
+// 角速度 (rad/s)
+var angular_speed = 1;
+
 const f_button = document.getElementById("forward");
 const b_button = document.getElementById("backward");
 const l_button = document.getElementById("left");
@@ -29,22 +34,22 @@ function rot_button_state(e){
   console.log("rot button state: " + this.state);
 }
 
-f_button.addEventListener("mousedown", {state: 1, handleEvent: vel_button_state}, false);
-f_button.addEventListener("touchstart", {state: 1, handleEvent: vel_button_state}, false);
+f_button.addEventListener("mousedown", {state: linear_speed, handleEvent: vel_button_state}, false);
+f_button.addEventListener("touchstart", {state: linear_speed, handleEvent: vel_button_state}, false);
 f_button.addEventListener("mouseup", {state: 0, handleEvent: vel_button_state}, false);
 f_button.addEventListener("touchend", {state: 0, handleEvent: vel_button_state}, false);
 
-b_button.addEventListener("mousedown", {state: -1, handleEvent: vel_button_state}, false);
-b_button.addEventListener("touchstart", {state: -1, handleEvent: vel_button_state}, false);
+b_button.addEventListener("mousedown", {state: -linear_speed, handleEvent: vel_button_state}, false);
+b_button.addEventListener("touchstart", {state: -linear_speed, handleEvent: vel_button_state}, false);
 b_button.addEventListener("mouseup", {state: 0, handleEvent: vel_button_state}, false);
 b_button.addEventListener("touchend", {state: 0, handleEvent: vel_button_state}, false);
 
-l_button.addEventListener("mousedown", {state: 1, handleEvent: rot_button_state}, false);
-l_button.addEventListener("touchstart", {state: 1, handleEvent: rot_button_state}, false);
+l_button.addEventListener("mousedown", {state: angular_speed, handleEvent: rot_button_state}, false);
+l_button.addEventListener("touchstart", {state: angular_speed, handleEvent: rot_button_state}, false);
 l_button.addEventListener("mouseup", {state: 0, handleEvent: rot_button_state}, false);
 l_button.addEventListener("touchend", {state: 0, handleEvent: rot_button_state}, false);
 
-r_button.addEventListener("mousedown", {state: -1, handleEvent: rot_button_state}, false);
-r_button.addEventListener("touchstart", {state: -1, handleEvent: rot_button_state}, false);
+r_button.addEventListener("mousedown", {state: -angular_speed, handleEvent: rot_button_state}, false);
+r_button.addEventListener("touchstart", {state: -angular_speed, handleEvent: rot_button_state}, false);
 r_button.addEventListener("mouseup", {state: 0, handleEvent: rot_button_state}, false);
 r_button.addEventListener("touchend", {state: 0, handleEvent: rot_button_state}, false);

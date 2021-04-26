@@ -17,5 +17,5 @@
 var image_topic_l = "/csi_cam_0/image_raw";
 var image_topic_r = "/csi_cam_1/image_raw";
 
-document.write("<img class='camera_image' src='http://" + port_8080 + "/stream?topic=" + image_topic_l + "&type=ros_compressed'></img>");
-document.write("<img class='camera_image' src='http://" + port_8080 + "/stream?topic=" + image_topic_r + "&type=ros_compressed'></img>");
+document.write("<img class='camera_image' src='http://" + location.hostname + ":8080/stream?topic=" + image_topic_l + "&type=ros_compressed'></img>");
+document.write("<img class='camera_image' src='http://" + location.hostname + ":8080/stream?topic=" + image_topic_r + "&type=ros_compressed'></img>");

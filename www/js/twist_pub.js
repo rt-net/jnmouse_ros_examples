@@ -22,60 +22,12 @@
 // また以下のページを参考にしています
 // https://gray-code.com/javascript/get-parameter-of-url/
 
-var alpha = 0;
-var beta  = 0;
-var gamma = 0;
 var yaw = 0;
 var vel = 0;
 
-var url = new URL(window.location.href);
-var params = url.searchParams;
-var port_8080 = params.get('port_8080');
-var port_9090 = params.get('port_9090');
-console.log(port_8080)
-console.log(port_9090)
-if (port_8080 == null) port_8080 = location.hostname + ':8080'
-if (port_9090 == null) port_9090 = 'ws://' + location.hostname + ':9090'
-
-function tilt(){
-  request_permission()
-
-  window.addEventListener("deviceorientation", function(pose){
-    alpha = pose.alpha;
-    beta  = pose.beta;
-    gamma = pose.gamma;
-    if(beta < -90 || beta > 90){
-      yaw = alpha - 180;
-    } else {
-      if(alpha > 180){
-        yaw = alpha - 360;
-      } else {
-        yaw = alpha;
-      }
-    }
-  }, false);
-}
-
-function request_permission(){
-  if (
-    DeviceMotionEvent &&
-    DeviceMotionEvent.requestPermission &&
-    typeof DeviceMotionEvent.requestPermission === 'function'
-  ) {
-    DeviceMotionEvent.requestPermission();
-  }
-  if (
-    DeviceOrientationEvent &&
-    DeviceOrientationEvent.requestPermission &&
-    typeof DeviceOrientationEvent.requestPermission === 'function'
-  ) {
-    DeviceOrientationEvent.requestPermission();
-  }
-}
-
 //ROS
 var ros = new ROSLIB.Ros({
-  url: port_9090
+  url: 'ws://' + location.hostname + ':9090'
 });
 
 ros.on('connection', function() {
