@@ -32,8 +32,10 @@ ROSのセットアップは[こちらのブログ記事](https://rt-net.jp/mobil
 ```sh
 cd ~/catkin_ws/src
 # Clone ROS packages
-git clone https://github.com/ryuichiueda/raspimouse_ros_2.git
 git clone https://github.com/rt-net/jnmouse_ros_examples.git
+git clone https://github.com/rt-net/jetson_nano_csi_cam_ros.git 
+git clone https://github.com/rt-net/gscam.git
+git clone https://github.com/ryuichiueda/raspimouse_ros_2.git
 
 # Install dependencies
 rosdep install -r -y -i --from-paths .

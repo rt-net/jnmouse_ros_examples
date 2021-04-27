@@ -1,0 +1,79 @@
+<@charset "UTF-8";>
+
+*{
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+html {
+  overflow: hidden;
+  position: fixed;
+}
+
+body {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  position: fixed;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+}
+
+.vr_view{
+  text-align:center;
+  height: 100%;
+  position: relative;
+}
+
+.vr_view .buttons_l{
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+}
+
+.vr_view .buttons_r{
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+}
+
+.camera_image{
+  display: inline-block;
+  /* 左右映像の幅調整 */
+  max-width: 50%;
+  height: 100%;
+  object-fit: cover;
+}
+
+button {
+  display: inline-block;
+  width: 70px;
+  height: 70px;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: #303030;
+  border: solid 3px #ffffff;
+  border-radius: 50%;
+  font-size: 25px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  padding: 0px;
+}
+
+
+/*
+ * Copyright 2020-2021 RT Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
