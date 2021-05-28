@@ -1,6 +1,16 @@
 <?xml version="1.0"?>
 <launch>
-  <include file="$(find raspimouse_ros_2)/launch/raspimouse.launch" />
+  <!-- robot control nodes -->
+  <arg name="initial_motor_power" default="off" />
+  <node pkg="raspimouse_ros_2" name="motors" type="motors" required="true"
+    output="screen" args="$(arg initial_motor_power)" />
+  <node pkg="raspimouse_ros_2" name="buzzer" type="buzzer.py" required="true" />
+  <node pkg="raspimouse_ros_2" name="leds" type="leds" required="true" />
+  <node pkg="raspimouse_ros_2" name="buttons" type="buttons" required="true" />
+
+  <!-- camera node -->
   <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch" />
+
+  <!-- line following node -->
   <node pkg="jnmouse_ros_examples" name="line_following" type="line_following.py" required="true" output="screen" />
 </launch>
