@@ -212,7 +212,15 @@ class LineFollower():
                     result_img = self._draw_result_img(org_img, biggest_contour)
                     # 画像処理結果をパブリッシュ
                     self._monitor(result_img, self._pub_result_img)
-                
+                else:
+                    rospy.loginfo(
+                        "jnmouse_ros_examples/line_following.py: Cannot calculate center line in image")
+            else:
+                rospy.loginfo(
+                    "jnmouse_ros_examples/line_following.py: No valid contour in image")
+        else:
+            rospy.logerr(
+                "jnmouse_ros_examples/line_following.py: No valid image")
 
     def control(self):
         cmd_vel = Twist()
