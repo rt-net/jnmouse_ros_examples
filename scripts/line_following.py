@@ -213,8 +213,9 @@ class LineFollower():
                     # 画像処理結果をパブリッシュ
                     self._monitor(result_img, self._pub_result_img)
                 else:
+                    self._monitor(org_img, self._pub_result_img)
                     rospy.loginfo(
-                        "jnmouse_ros_examples/line_following.py: Cannot calculate center line in image")
+                        "jnmouse_ros_examples/line_following.py: Cannot find center line in image")
             else:
                 rospy.loginfo(
                     "jnmouse_ros_examples/line_following.py: No valid contour in image")
