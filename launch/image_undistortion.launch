@@ -1,11 +1,12 @@
 <launch>
+  <!-- camera node -->
   <arg name="width" default="640" />
   <arg name="height" default="480" />
-
   <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch">
     <arg name="width" value="$(arg width)" />
     <arg name="height" value="$(arg height)" />
   </include>
 
+  <!-- image undistortion node -->
   <node pkg="jnmouse_ros_examples" name="image_undistortion" type="image_undistortion.py" required="true" output="screen" />
 </launch>
