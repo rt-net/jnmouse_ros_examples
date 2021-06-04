@@ -20,7 +20,6 @@ import rospy
 import cv2
 import numpy as np
 import copy
-import glob
 import message_filters
 from sensor_msgs.msg import Image
 import rosparam
