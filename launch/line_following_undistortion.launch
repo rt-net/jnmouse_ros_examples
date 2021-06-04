@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- robot control nodes -->
+  <arg name="initial_motor_power" default="off" />
+  <node pkg="raspimouse_ros_2" name="motors" type="motors" required="true"
+  output="screen" args="$(arg initial_motor_power)" />
+  <node pkg="raspimouse_ros_2" name="buzzer" type="buzzer.py" required="true" />
+  <node pkg="raspimouse_ros_2" name="leds" type="leds" required="true" />
+  <node pkg="raspimouse_ros_2" name="buttons" type="buttons" required="true" />
+
+  <include file="$(find jnmouse_ros_examples)/launch/image_undistortion.launch" />
+
+  <node pkg="jnmouse_ros_examples" name="line_following" type="line_following.py" required="true" output="screen">
+    <remap from="/csi_cam_0/image_raw" to="/camera_l/image_rect_color" />
+  </node>
+</launch>
