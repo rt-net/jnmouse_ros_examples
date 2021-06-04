@@ -93,6 +93,12 @@ rqt_image_view
 
 ![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_image_undistortion_screenshot.png)
 
+下記コマンドで歪み補正した画像を用いてライントレースを行います。
+
+```sh
+roslaunch jnmouse_ros_examples line_following_undistortion.launch
+```
+
 ## ライセンス
 
 (C) 2020 RT Corporation \<support@rt-net.jp\>
