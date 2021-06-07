@@ -40,7 +40,7 @@ class ImageUndistortion:
         self._captured_img_width = rosparam.get_param("/csi_cam_0/image_width")
         self._captured_img_height = rosparam.get_param("/csi_cam_0/image_height")
 
-        camera_param = np.load('{}/catkin_ws/src/jnmouse_ros_examples/config/camera_param_fisheye.npz'.format(os.environ['HOME']))
+        camera_param = np.load('{}/config/camera_param_fisheye.npz'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
         mtx_l, dist_l, mtx_r, dist_r, R, T = [camera_param[i] for i in ["mtx_l", "dist_l", "mtx_r", "dist_r", "R", "T"]]
 
         newmtx_r = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(mtx_r, dist_r, (self._captured_img_width, self._captured_img_height), None, balance=1.0)
