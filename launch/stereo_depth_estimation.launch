@@ -1,0 +1,7 @@
+<launch>
+  <!-- image undistortion node -->
+  <include file="$(find jnmouse_ros_examples)/launch/image_undistortion.launch" />
+  
+  <!-- stereo depth estimation node -->
+  <node pkg="jnmouse_ros_examples" name="jnm_depth_estimator" type="stereo_depth_estimation.py" required="true" output="screen" />
+</launch>
