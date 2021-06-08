@@ -99,6 +99,27 @@ rqt_image_view
 roslaunch jnmouse_ros_examples line_following_undistortion.launch
 ```
 
+### stereo_depth_estimation
+
+ステレオカメラ画像から深度推定を行うコード例です。
+
+#### 使い方
+
+こちらのnotebookでカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+
+次のコマンドでノードを起動します。
+
+```sh
+roslaunch jnmouse_ros_examples stereo_depth_estimation.launch
+```
+
+/depth/image_rectに深度画像が配信されます。  
+リモートでrvizなどを使用すれば、深度画像を見ることができます。
+
+```sh
+rviz
+```
+
 ## ライセンス
 
 (C) 2020 RT Corporation \<support@rt-net.jp\>
