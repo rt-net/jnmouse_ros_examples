@@ -5,12 +5,7 @@
   <arg name="height" default="180" />
 
   <!-- robot control nodes -->
-  <arg name="initial_motor_power" default="off" />
-  <node pkg="raspimouse_ros_2" name="motors" type="motors" required="true"
-    output="screen" args="$(arg initial_motor_power)" />
-  <node pkg="raspimouse_ros_2" name="buzzer" type="buzzer.py" required="true" />
-  <node pkg="raspimouse_ros_2" name="leds" type="leds" required="true" />
-  <node pkg="raspimouse_ros_2" name="buttons" type="buttons" required="true" />
+  <include file="$(find jnmouse_ros_examples)/launch/jnmouse.launch" />
 
   <!-- HTTP web server -->
   <include file="$(find roswww)/launch/roswww.launch" />

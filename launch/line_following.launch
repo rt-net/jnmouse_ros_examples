@@ -1,12 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <!-- robot control nodes -->
-  <arg name="initial_motor_power" default="off" />
-  <node pkg="raspimouse_ros_2" name="motors" type="motors" required="true"
-    output="screen" args="$(arg initial_motor_power)" />
-  <node pkg="raspimouse_ros_2" name="buzzer" type="buzzer.py" required="true" />
-  <node pkg="raspimouse_ros_2" name="leds" type="leds" required="true" />
-  <node pkg="raspimouse_ros_2" name="buttons" type="buttons" required="true" />
+  <include file="$(find jnmouse_ros_examples)/launch/jnmouse.launch" />
 
   <!-- camera node -->
   <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch" />
