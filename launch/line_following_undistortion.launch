@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- robot control node -->
+  <include file="$(find jnmouse_ros_examples)/launch/jnmouse.launch" />
+
+  <!-- image undistortion node -->
+  <include file="$(find jnmouse_ros_examples)/launch/image_undistortion.launch" />
+
+  <!-- line following node -->
+  <node pkg="jnmouse_ros_examples" name="line_following" type="line_following.py" required="true" output="screen">
+    <remap from="/csi_cam_0/image_raw" to="/camera_l/image_rect_color" />
+  </node>
+</launch>

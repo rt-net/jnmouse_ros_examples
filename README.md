@@ -69,6 +69,36 @@ rqt_image_view
 
 ![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_line_follwing_screenshot.png)
 
+
+### image_undistortion
+
+ステレオカメラ画像の歪み補正とステレオ平行化を行うコード例です。
+
+#### 使い方
+
+こちらのnotebookでカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+
+次のコマンドでノードを起動します。
+
+```sh
+roslaunch jnmouse_ros_examples image_undistortion.launch
+```
+
+/camera_l/image_rect_color、/camera_r/image_rect_colorに歪み補正とステレオ平行化された画像が配信されます。  
+リモートでrqt_image_viewなどを使用すれば、補正前と補正後の画像を見比べることができます。
+
+```sh
+rqt_image_view
+```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_image_undistortion_screenshot.png)
+
+下記コマンドで歪み補正した画像を用いてライントレースを行います。
+
+```sh
+roslaunch jnmouse_ros_examples line_following_undistortion.launch
+```
+
 ## ライセンス
 
 (C) 2020 RT Corporation \<support@rt-net.jp\>
