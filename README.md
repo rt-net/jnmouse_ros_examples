@@ -76,7 +76,7 @@ rqt_image_view
 
 #### 使い方
 
-こちらのnotebookでカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
 
 次のコマンドでノードを起動します。
 
