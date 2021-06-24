@@ -14,14 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# 以下のページを参考にしています
-# 視差画像から深度画像への変換
-# https://dev.classmethod.jp/articles/stereo-depth-estimation-with-opencv-2nd/
-# カメラ視野角の取得
-# https://nextremer-nbo.blogspot.com/2018/08/opencvcvcalibrationmatrixvalues.html
-# センササイズ
-# https://www.hikarimart.net/data/imagersize.html
 
 import rospy
 import rospkg
@@ -55,12 +47,7 @@ class StereoDepthEstimator:
 
         newmtx_r = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(mtx_r, dist_r, (self._captured_img_width, self._captured_img_height), None, balance=1.0)
         newmtx_l = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(mtx_l, dist_l, (self._captured_img_width, self._captured_img_height), None, balance=1.0)
-
-        aperture_width=3.6
-        aperture_height=2.7
-        fovx, fovy, focal_length, principal_point, aspect_ratio = cv2.calibrationMatrixValues(newmtx_l, (self._captured_img_width, self._captured_img_height), aperture_width, aperture_height)
-        camera_distance = np.linalg.norm(T)
-        self.px_per_mm = camera_distance * int(self._captured_img_width*self.img_scale) / 2 / np.tan(np.deg2rad(fovx) / 2)
+        Rp_l, Rp_r, Pp_l, Pp_r, self.Q = cv2.fisheye.stereoRectify(newmtx_l, dist_l, newmtx_r, dist_r, (self._captured_img_width, self._captured_img_height), R, T, 0)
 
         min_disp = 16
         window_size = 9
@@ -114,9 +101,11 @@ class StereoDepthEstimator:
             disparity = self.stereo.compute(rectified_grayimg_l_half, rectified_grayimg_r_half) / 16
 
             # 視差[px]を距離[mm]に変換
-            depth = self.px_per_mm / disparity
+            depth = self.Q[2, 3] / (self.Q[3, 2] * disparity + self.Q[3, 3])
+            rospy.loginfo(self.Q)
+
             depth[np.where(depth < 0)] = 0
-            depth[np.where(depth > 400)] = 0
+            depth[np.where(depth > 500)] = 0
             depth = depth.astype(np.uint16)
             
             self._monitor(depth, self._pub_depth_img)
