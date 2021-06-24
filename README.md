@@ -45,6 +45,18 @@ cd ~/catkin_ws && catkin build
 source devel/setup.bash
 ```
 
+本パッケージのスクリプトを実行する際はCPUのパフォーマンスを優先するMAXNモードを推奨します。下記コマンドでMAXNモードに変更できます。
+
+```
+sudo nvpmodel -m 0
+```
+
+CPUパフォーマンスとエネルギー消費を抑える5Wモードに戻す場合は下記コマンドを実行します。
+
+```
+sudo nvpmodel -m 1
+```
+
 ## サンプルの実行方法
 ### line_following
 
@@ -75,8 +87,7 @@ rqt_image_view
 ステレオカメラ画像の歪み補正とステレオ平行化を行うコード例です。
 
 #### 使い方
-
-こちらのnotebookでカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
 
 次のコマンドでノードを起動します。
 
