@@ -46,6 +46,7 @@ class StereoDepthEstimator:
         self._pub_depth_img = rospy.Publisher("/depth/image_rect", Image, queue_size=1)
         self._captured_img_width = rosparam.get_param("/csi_cam_0/image_width")
         self._captured_img_height = rosparam.get_param("/csi_cam_0/image_height")
+        self._is_debug = rosparam.get_param("/jnm_depth_estimator/debug")
         self.img_scale = 0.5
 
         rospy.loginfo("loading camera parameter")
@@ -94,9 +95,12 @@ class StereoDepthEstimator:
         if img.ndim == 2:
             center_x = int(self._captured_img_width*self.img_scale/2)
             center_y = int(self._captured_img_height*self.img_scale/2)
-            rospy.loginfo("distance[mm]: "+str(img[center_y, center_x]))
-            # 距離測定位置を確認用に円で描画
-            cv2.circle(img, (center_x, center_y), 5, 0, thickness=1)
+
+            if self._is_debug:
+                rospy.loginfo("distance[mm]: "+str(img[center_y, center_x]))
+                # 距離測定位置を確認用に円で描画
+                cv2.circle(img, (center_x, center_y), 5, 0, thickness=1)
+
             pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "16UC1"))
         elif img.ndim == 3:
             pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "bgr8"))
@@ -106,6 +110,7 @@ class StereoDepthEstimator:
     def depth_estimation(self):
         org_img_l = copy.deepcopy(self._captured_img_l)
         org_img_r = copy.deepcopy(self._captured_img_r)
+
         if org_img_l is not None and org_img_r is not None:
             # Block Matchingによるステレオマッチング
             rectified_grayimg_l = cv2.cvtColor(org_img_l, cv2.COLOR_BGR2GRAY)
