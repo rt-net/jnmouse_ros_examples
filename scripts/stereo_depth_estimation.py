@@ -62,18 +62,12 @@ class StereoDepthEstimator:
         camera_distance = np.linalg.norm(T)
         self.px_per_mm = camera_distance * int(self._captured_img_width*self.img_scale) / 2 / np.tan(np.deg2rad(fovx) / 2)
 
-        #min_disp = 32
         min_disp = 16
         window_size = 9
         self.stereo = cv2.StereoSGBM_create(
             minDisparity = min_disp,
-            #640x480用パラメータ
-            #numDisparities = 160,
-            #320x240用パラメータ
             numDisparities = 16*3,
             blockSize = window_size,
-            #P1 = 6*3*window_size**2,
-            #P2 = 24*3*window_size**2,
             P1 = 8*1*window_size**2,
             P2 = 32*1*window_size**2,
             disp12MaxDiff = 1,
@@ -98,7 +92,7 @@ class StereoDepthEstimator:
 
             if self._is_debug:
                 rospy.loginfo("distance[mm]: "+str(img[center_y, center_x]))
-                # 距離測定位置を確認用に円で描画
+                # 距離測定位置に円を描画
                 cv2.circle(img, (center_x, center_y), 5, 0, thickness=1)
 
             pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "16UC1"))
