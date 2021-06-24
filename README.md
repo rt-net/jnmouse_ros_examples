@@ -45,6 +45,18 @@ cd ~/catkin_ws && catkin build
 source devel/setup.bash
 ```
 
+本パッケージのスクリプトを実行する際はCPUのパフォーマンスを優先するMAXNモードを推奨します。下記コマンドでMAXNモードに変更できます。
+
+```
+sudo nvpmodel -m 0
+```
+
+CPUパフォーマンスとエネルギー消費を抑える5Wモードに戻す場合は下記コマンドを実行します。
+
+```
+sudo nvpmodel -m 1
+```
+
 ## サンプルの実行方法
 ### line_following
 
