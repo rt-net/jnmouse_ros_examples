@@ -97,7 +97,7 @@ class StereoDepthEstimator:
             rectified_grayimg_r = cv2.cvtColor(org_img_r, cv2.COLOR_BGR2GRAY)
             rectified_grayimg_l_half = cv2.resize(rectified_grayimg_l, dsize=None, fx=self.img_scale, fy=self.img_scale)
             rectified_grayimg_r_half = cv2.resize(rectified_grayimg_r, dsize=None, fx=self.img_scale, fy=self.img_scale)
-            disparity = self.stereo.compute(rectified_grayimg_l_half, rectified_grayimg_r_half) / 16
+            disparity = self.stereo.compute(rectified_grayimg_l_half, rectified_grayimg_r_half) / 16 / self.img_scale
 
             # 視差[px]を距離[mm]に変換
             depth = self.Q[2, 3] / (self.Q[3, 2] * disparity + self.Q[3, 3])
