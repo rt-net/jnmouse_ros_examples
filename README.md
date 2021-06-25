@@ -115,8 +115,7 @@ roslaunch jnmouse_ros_examples line_following_undistortion.launch
 ステレオカメラ画像から深度推定を行うコード例です。
 
 #### 使い方
-
-こちらのnotebookでカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+image_undistortionによる補正済み画像を用いるため、image_undistortionの環境構築と動作確認を行ってください。
 
 次のコマンドでノードを起動します。
 
@@ -129,6 +128,14 @@ roslaunch jnmouse_ros_examples stereo_depth_estimation.launch
 
 ```sh
 rviz
+```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_stereo_depth.png)
+
+下記コマンドを実行した場合はカメラ中央に写った物体までの推定距離がターミナルに表示されます。また目印として深度画像中央に円が描画されます。
+
+```sh
+roslaunch jnmouse_ros_examples stereo_depth_estimation.launch debug:=true
 ```
 
 ## ライセンス
