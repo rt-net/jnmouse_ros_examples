@@ -74,12 +74,11 @@ class StereoDepthEstimator:
 
     def _monitor(self, img, pub):
         if img.ndim == 2:
-            center_x = int(self._captured_img_width*self.img_scale/2)
-            center_y = int(self._captured_img_height*self.img_scale/2)
-
             if self._is_debug:
-                rospy.loginfo("distance[mm]: "+str(img[center_y, center_x]))
                 # 距離測定位置に円を描画
+                center_x = int(self._captured_img_width*self.img_scale/2)
+                center_y = int(self._captured_img_height*self.img_scale/2)
+                rospy.loginfo("distance[mm]: "+str(img[center_y, center_x]))
                 cv2.circle(img, (center_x, center_y), 5, 0, thickness=1)
 
             pub.publish(self._cv_bridge.cv2_to_imgmsg(img, "16UC1"))
@@ -102,7 +101,6 @@ class StereoDepthEstimator:
 
             # 視差[px]を距離[mm]に変換
             depth = self.Q[2, 3] / (self.Q[3, 2] * disparity + self.Q[3, 3])
-            rospy.loginfo(self.Q)
 
             depth[np.where(depth < 0)] = 0
             depth[np.where(depth > 500)] = 0
