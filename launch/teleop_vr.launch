@@ -22,8 +22,8 @@
   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
 
   <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch">
-    <param name="width" value="$(arg width)" />
-    <param name="height" value="$(arg height)" />
+    <arg name="width" value="$(arg width)" />
+    <arg name="height" value="$(arg height)" />
   </include>
   <node name="image_republish_l" pkg="image_transport" type="republish" args="raw compressed">
     <remap from="in" to="/csi_cam_0/image_raw" />
