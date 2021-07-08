@@ -21,6 +21,7 @@ import math
 import numpy as np
 import copy
 import rosparam
+import rospkg
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -101,12 +102,12 @@ class SetImagePoints():
         # ROI更新時の拡張サイズ指定（単位: pixel）
         # 値が大きいほど広範囲から検出を行う
         self._expand_range = 50
-        camera_position = rospy.get_param("/camera_position")
+        self.camera_position = rospy.get_param("~camera_position")
 
-        if camera_position == "left":
-            self._sub_img = rospy.Subscriber("/left/image_rect", Image, self._img_callback)
-        elif camera_position == "right":
-            self._sub_img = rospy.Subscriber("/right/image_rect", Image, self._img_callback)
+        if self.camera_position == "left":
+            self._sub_img = rospy.Subscriber("left/image_rect", Image, self._img_callback)
+        elif self.camera_position == "right":
+            self._sub_img = rospy.Subscriber("right/image_rect", Image, self._img_callback)
 
 
     # 画像取得用のコールバック関数
@@ -155,14 +156,10 @@ class SetImagePoints():
                         image_point[0] = round(x / scale)
                         image_point[1] = round(y / scale)
 
-                    rospy.set_param("/image_points", image_points)
-                    camera_position = rospy.get_param("/camera_position")
-                    if camera_position == "left":
-                        rosparam.dump_params('image_points_left.yaml', "/image_points")
-                        image_points = rosparam.load_file('image_points_left.yaml')
-                    elif camera_position == "right":
-                        rosparam.dump_params("image_points_right.yaml", "/image_points")
-                        image_points = rosparam.load_file('image_points_right.yaml')
+                    rospy.set_param("image_points", image_points)
+                    target_file = '{}/config/image_points_{}.yaml'.format(rospkg.RosPack().get_path('jnmouse_ros_examples'), self.camera_position)
+                    rosparam.dump_params(target_file, "image_points")
+                    image_points = rosparam.load_file(target_file)
                     # パノラマ合成に必要なのはimage_points[0][0]のlist
                     print(image_points[0][0])
                     rospy.signal_shutdown("finished")

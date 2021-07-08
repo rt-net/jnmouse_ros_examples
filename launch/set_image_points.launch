@@ -1,9 +1,47 @@
+<?xml version="1.0"?>
 <launch>
-  <arg name="camera_position" default="left"/>
-  <include file="$(find jetson_nano_csi_cam)/launch/jetson_dual_csi_cam.launch" />
-    <param name="approximate_sync" value="true"/>
-    <param name="queue_size" value="100"/>
-  <node pkg="stereo_image_proc" name="stereo_image_proc" type="stereo_image_proc" ns="stereo"/>
-  <node pkg="jnmouse_ros_examples" name="set_image_points" type="set_image_points.py" output="screen" required="true"/>
-    <param name="camera_position" value="$(arg camera_position)"/>
+  <arg name="camera_position" default="left" />
+  <arg name="sync_sink" default="true" />
+  <arg name="width" default="480" />
+  <arg name="height" default="270" />
+  <arg name="fps" default="30" />
+  <arg name="flip_method" default="0" />
+
+  <group ns="stereo">
+    <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch">
+      <arg name="sensor_id" value="0" />
+      <arg name="cam_name" value="left" />
+      <arg name="frame_id" value="/csi_cam_0_link" />
+      <arg name="sync_sink" value="$(arg sync_sink)" />
+      <arg name="width" value="$(arg width)" />
+      <arg name="height" value="$(arg height)" />
+      <arg name="fps" value="$(arg fps)" />
+      <arg name="flip_method" value="$(arg flip_method)" />
+      <arg name="camera_info_url" value="package://jnmouse_ros_examples/config/sainsmart-imx219-jetson-nano-160deg-fov-left.yaml" />
+    </include>
+    <include file="$(find jetson_nano_csi_cam)/launch/jetson_csi_cam.launch">
+      <arg name="sensor_id" value="1" />
+      <arg name="cam_name" value="right" />
+      <arg name="frame_id" value="/csi_cam_1_link" />
+      <arg name="sync_sink" value="$(arg sync_sink)" />
+      <arg name="width" value="$(arg width)" />
+      <arg name="height" value="$(arg height)" />
+      <arg name="fps" value="$(arg fps)" />
+      <arg name="flip_method" value="$(arg flip_method)" />
+      <arg name="camera_info_url" value="package://jnmouse_ros_examples/config/sainsmart-imx219-jetson-nano-160deg-fov-right.yaml" />
+    </include>
+
+    <node pkg="stereo_image_proc" name="stereo_image_proc" type="stereo_image_proc">
+      <param name="approximate_sync" value="true" />
+      <param name="queue_size" value="100" />
+    </node>
+
+    <node pkg="jnmouse_ros_examples" name="set_image_points" type="set_image_points.py" output="screen" required="true">
+      <param name="camera_position" value="$(arg camera_position)" />
+    </node>
+
+  </group>
+
+
+
 </launch>

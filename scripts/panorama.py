@@ -21,6 +21,7 @@ import math
 import numpy as np
 import copy
 import rosparam
+import rospkg
 import message_filters
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -41,6 +42,7 @@ class Panorama():
         self._left = 0
         self._right = 0
 
+
         # 元画像より大きな白一色の画像を作成し，その上に元画像を重ねることでパノラマ化
         # 拡張画像の倍率
         self._magnification = 1.8
@@ -49,8 +51,8 @@ class Panorama():
         self._expand_range = 50
 
         # image_pointsをロード
-        self._image_points_l = rosparam.load_file('image_points_left.yaml')
-        self._image_points_r = rosparam.load_file('image_points_right.yaml')
+        self._image_points_l = rosparam.load_file('{}/config/image_points_left.yaml'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
+        self._image_points_r = rosparam.load_file('{}/config/image_points_right.yaml'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
 
         self._image_points_l = self._image_points_l[0][0]
         self._image_points_r = self._image_points_r[0][0]
@@ -58,12 +60,17 @@ class Panorama():
         self._image_points_l = np.array(self._image_points_l)
         self._image_points_r = np.array(self._image_points_r)
 
-        self._image_points_l = self._image_points_l.reshape(30, 1, 2)
-        self._image_points_r = self._image_points_r.reshape(30, 1, 2)
+        number_of_feature_points_l = self._image_points_l.shape[0]
+        number_of_feature_points_r = self._image_points_r.shape[0]
+        if number_of_feature_points_l != number_of_feature_points_r:
+            rospy.logerr("The number of feature points does not match.")
+
+        self._image_points_l = self._image_points_l.reshape(number_of_feature_points_l, 1, 2)
+        self._image_points_r = self._image_points_r.reshape(number_of_feature_points_r, 1, 2)
         
         # 歪み補正後の画像をサブスクライブ
-        self._sub_img_l = rospy.Subscriber("/left/image_rect", Image, self._img_callback, callback_args="left")
-        self._sub_img_r = rospy.Subscriber("/right/image_rect", Image, self._img_callback, callback_args="right")
+        self._sub_img_l = rospy.Subscriber("left/image_rect", Image, self._img_callback, callback_args="left")
+        self._sub_img_r = rospy.Subscriber("right/image_rect", Image, self._img_callback, callback_args="right")
 
 
         # ホモグラフィを計算
@@ -77,13 +84,14 @@ class Panorama():
         self._H = H
 
         # CUDA用
-        self._img_gpu_src = cv2.cuda_GpuMat()
-        self._img_gpu_dst = cv2.cuda_GpuMat()
+        if cv2.cuda.getCudaEnabledDeviceCount() > 0:
+            self._img_gpu_src = cv2.cuda_GpuMat()
+            self._img_gpu_dst = cv2.cuda_GpuMat()
 
         # パブリッシャの作成
-        self._pub_panorama_img = rospy.Publisher("/panorama_img", Image, queue_size=1)
-        self._pub_right_img = rospy.Publisher("/right_img", Image, queue_size=1)
-        self._pub_warped_img = rospy.Publisher("/warped_img", Image, queue_size=1)
+        self._pub_panorama_img = rospy.Publisher("panorama_img", Image, queue_size=1)
+        self._pub_right_img = rospy.Publisher("right_img", Image, queue_size=1)
+        self._pub_warped_img = rospy.Publisher("warped_img", Image, queue_size=1)
 
 
     # サブスクライバ用のコールバック関数 
@@ -110,8 +118,8 @@ class Panorama():
 
 
     def _calc_params(self):
-        self._h = rospy.get_param("/left/image_height")
-        self._w = rospy.get_param("/left/image_width")
+        self._h = rospy.get_param("left/image_height")
+        self._w = rospy.get_param("left/image_width")
             
         # 拡張画像用にl, r, t, bを計算
         mag = self._magnification
@@ -177,9 +185,12 @@ class Panorama():
         ex_h, ex_w = ex_img_l.shape[:2]
 
         # 左画像をホモグラフィ行列を用いて射影変換(CUDA)
-        self._img_gpu_src.upload(ex_img_l)
-        self._img_gpu_dst = cv2.cuda.warpPerspective(self._img_gpu_src , H, (ex_w, ex_h), borderValue=(255,255,255))
-        warped_img_l = self._img_gpu_dst.download()
+        if cv2.cuda.getCudaEnabledDeviceCount() > 0:
+            self._img_gpu_src.upload(ex_img_l)
+            self._img_gpu_dst = cv2.cuda.warpPerspective(self._img_gpu_src, H, (ex_w, ex_h), borderValue=(255,255,255))
+            warped_img_l = self._img_gpu_dst.download()
+        else:
+            warped_img_l = cv2.warpPerspective(ex_img_l, H, (ex_w, ex_h), borderValue=(255,255,255))
 
         # 右画像を下地に，変換された左画像を追加してパノラマ画像化
         panorama_img = ex_img_r
@@ -208,8 +219,8 @@ if __name__ == '__main__':
     p = Panorama()
 
     # タイムスタンプによる左右画像の同期
-    sub_img_l = message_filters.Subscriber("/left/image_rect", Image)
-    sub_img_r = message_filters.Subscriber("/right/image_rect", Image)
+    sub_img_l = message_filters.Subscriber("left/image_rect", Image)
+    sub_img_r = message_filters.Subscriber("right/image_rect", Image)
 
     ts = message_filters.ApproximateTimeSynchronizer([sub_img_l, sub_img_r], 1, 0.05)
 
