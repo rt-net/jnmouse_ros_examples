@@ -36,6 +36,7 @@ git clone https://github.com/rt-net/jnmouse_ros_examples.git
 git clone https://github.com/rt-net/jetson_nano_csi_cam_ros.git 
 git clone https://github.com/rt-net/gscam.git
 git clone https://github.com/ryuichiueda/raspimouse_ros_2.git
+git clone https://github.com/rt-net/jnmouse_description.git
 
 # Install dependencies
 rosdep install -r -y -i --from-paths .
@@ -109,6 +110,118 @@ rqt_image_view
 
 ```sh
 roslaunch jnmouse_ros_examples line_following_undistortion.launch
+```
+
+### visual_slam
+
+OpenVSLAMを用いてVisual SLAMを行うコード例です。
+
+#### 使い方
+##### 準備編
+ORBボキャブラリーファイルをダウンロードします。
+
+```
+roscd jnmouse_ros_examples/config/
+curl -sL "https://github.com/OpenVSLAM-Community/FBoW_orb_vocab/raw/main/orb_vocab.fbow" -o orb_vocab.fbow
+```
+
+[camera_calibration](http://wiki.ros.org/camera_calibration)パッケージを用いてカメラパラメータを取得します。下記コマンドでcamera_calibrationをインストールします。
+
+```
+sudo apt-get install -y ros-melodic-camera-calibration
+sudo apt-get install -y ros-melodic-image-proc
+```
+
+JNMouseにディスプレイを接続し、下記コマンドでカメラ映像の配信とcamera_calibrationを開始します。camera_calibrationにはチェスボードが必要です。[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/blob/master/notebooks/camera_undistort/undistort/undistort_data_collection.ipynb)を参考にチェスボードを作成してください。作成したチェスボードのマス目の数や大きさに合わせて下記コマンドの`--size`と`--square`オプションを変更してから実行してください。
+
+```
+roslaunch jetson_nano_csi_cam jetson_dual_csi_cam.launch width:=640 height:=480
+rosrun camera_calibration cameracalibrator.py --size 9x6 --square 0.024 --approximate=0.03 left:=/csi_cam_0/image_raw right:=/csi_cam_1/image_raw left_camera:=/csi_cam_0 right_camera:=/csi_cam_1
+```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_camera_calibration.png)
+
+カメラがチェスボードを認識するとチェスボードの交点が線で結ばれます。認識された状態を保ちながらX、Y、Size、Skewのゲージが緑になるまでチェスボードを上下左右、前後、傾き方向に移動させます。キャリブレーションが完了すると画面右側のSAVEボタンが緑色になるのでクリックしてカメラパラメータを保存し、camera_calibrationを終了します。
+
+保存したカメラパラメータは圧縮されているので下記コマンドで展開します。展開したファイル内の`ost.txt`に記述されているカメラパラメータを`config/jnmouse_stereo.yaml`に入力します。
+
+```
+tar -xvzf /tmp/calibrationdata.tar.gz
+```
+
+下記コマンドでOpenVSLAMを起動するためのDockerfileをビルドします。
+
+```
+roscd jnmouse_ros_examples/
+sudo docker build -t openvslam-socket-ros . --build-arg NUM_THREADS=4
+```
+
+SLAMした結果はブラウザで確認することができます。ブラウザのアクセス先となるWebサーバを起動するためのDockerfileをビルドします。clone先は任意のディレクトリで問題ありません。
+
+```
+git clone https://github.com/OpenVSLAM-Community/openvslam.git
+cd openvslam/viewer/
+sudo docker build -t openvslam-server .
+```
+
+##### 起動編
+下記コマンドでDockerコンテナを起動します。
+
+```
+sudo docker run --rm -it --name openvslam-server --net=host openvslam-server
+sudo docker run --rm -it --name openvslam-socket-ros --net=host --volume /home/jetbot/catkin_ws/src/jnmouse_ros_examples:/root/catkin_ws/src/jnmouse_ros_examples openvslam-socket-ros
+```
+
+openvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。`JNMouseIP`はJetson Nano MouseのIPアドレスに置き換えてください。
+
+```
+apt-get update
+rosdep install -r -y -i --from-paths .
+cd ~/catkin_ws && catkin_make
+source ~/catkin_ws/devel/setup.bash
+export ROS_IP=JNMouseIP
+export ROS_MASTER_URI=http://$ROS_IP:11311
+```
+
+Docker環境外で下記コマンドを実行します。カメラ映像が配信され、teleop_twist_keyboardでJetson Nano Mouseを操作することができます。
+
+```
+roslaunch jnmouse_ros_examples vslam_host.launch
+rosservice call /motor_on
+```
+
+SLAMを行う場合はopenvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。デフォルトではステレオカメラを用いてSLAMを行います。
+
+```
+roslaunch jnmouse_ros_examples slam_docker.launch
+```
+
+単眼カメラの場合は下記コマンドを実行します。
+
+```
+roslaunch jnmouse_ros_examples slam_docker.launch slam_mode:=mono
+```
+
+Localizationを行う場合はopenvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。デフォルトではステレオカメラを用いてLocalizationを行います。
+
+```
+roslaunch jnmouse_ros_examples localization_docker.launch
+```
+
+単眼カメラの場合は下記コマンドを実行します。
+
+```
+roslaunch jnmouse_ros_examples localization_docker.launch slam_mode:=mono
+```
+
+ブラウザから下記アドレスにアクセスするとOpenVSLAMの実行結果を見ることができます。
+
+http://jetson-4-3.local:3001/
+
+Rvizでロボットの位置姿勢を確認することができます。`config/jnmouse_vslam.rviz`をPCにダウンロードして下記コマンドを実行します。
+
+```
+rviz -d jnmouse_vslam.rviz
 ```
 
 ## ライセンス

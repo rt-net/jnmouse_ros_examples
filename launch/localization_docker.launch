@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- visual slam node -->
+  <arg name="vocabulary" default="$(find jnmouse_ros_examples)/config/orb_vocab.fbow" />
+  <arg name="frame-skip" default="3" />
+  <arg name="map-db" default="$(find jnmouse_ros_examples)/config/map.msg" />
+  <arg name="odom_frame" default="odom" />
+  <arg name="map_frame" default="vslam_map" />
+  <arg name="base_link" default="base_link" />
+  <arg name="publish_tf_" default="true" />
+  <arg name="transform_tolerance" default="0.5" />
+  <arg name="slam_mode" default="stereo" />
+
+  <group if="$(eval slam_mode=='stereo')">
+    <arg name="config" default="$(find jnmouse_ros_examples)/config/jnmouse_stereo.yaml" />
+    <node pkg="openvslam_ros" name="run_localization" type="run_localization" args="-v $(arg vocabulary) -c $(arg config) --frame-skip $(arg frame-skip) --map-db $(arg map-db)" output="screen">
+      <remap from="/camera/left/image_raw" to="/csi_cam_0/image_raw" />
+      <remap from="/camera/right/image_raw" to="/csi_cam_1/image_raw" />
+      <rosparam param="odom_frame" subst_value="true">$(arg odom_frame)</rosparam>
+      <rosparam param="map_frame" subst_value="true">$(arg map_frame)</rosparam>
+      <rosparam param="base_link" subst_value="true">$(arg base_link)</rosparam>
+      <rosparam param="publish_tf_" subst_value="true">$(arg publish_tf_)</rosparam>
+      <rosparam param="transform_tolerance" subst_value="true">$(arg transform_tolerance)</rosparam>
+    </node>
+  </group>
+
+  <group if="$(eval slam_mode=='mono')">
+    <arg name="config" default="$(find jnmouse_ros_examples)/config/jnmouse_mono.yaml" />
+    <node pkg="openvslam_ros" name="run_localization" type="run_localization" args="-v $(arg vocabulary) -c $(arg config) --frame-skip $(arg frame-skip) --map-db $(arg map-db)" output="screen">
+      <remap from="/camera/image_raw" to="/csi_cam_0/image_raw" />
+      <rosparam param="odom_frame" subst_value="true">$(arg odom_frame)</rosparam>
+      <rosparam param="map_frame" subst_value="true">$(arg map_frame)</rosparam>
+      <rosparam param="base_link" subst_value="true">$(arg base_link)</rosparam>
+      <rosparam param="publish_tf_" subst_value="true">$(arg publish_tf_)</rosparam>
+      <rosparam param="transform_tolerance" subst_value="true">$(arg transform_tolerance)</rosparam>
+    </node>
+  </group>
+</launch>

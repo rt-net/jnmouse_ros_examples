@@ -1,0 +1,80 @@
+#==============#
+# Camera Model #
+#==============#
+# 下記ページを参考にしています
+# https://github.com/OpenVSLAM-Community/openvslam/blob/main/example/euroc/EuRoC_stereo.yaml
+
+# intrinsic parameters after stereo-rectification are written
+Camera:
+  name: "jnmouse stereo"
+  setup: "stereo"
+  model: "perspective"
+
+# new "rectified" matrices is the first three cols of the projection matrix which is calculated with cv::stereoRectify()
+# e.g. fx = P1[0][0] or P2[0][0], cx = P1[0][2] or P2[0][2]
+#      fy = P1[1][1] or P2[1][1], cy = P1[1][2] or P2[1][2]
+
+  fx: 536.003700
+  fy: 536.003700
+  cx: 388.080181
+  cy: 310.278379
+
+# there is no distortion after stereo rectification
+
+  k1: 0.0
+  k2: 0.0
+  p1: 0.0
+  p2: 0.0
+  k3: 0.0
+
+# focal_x_baseline is -P2[0][3] which is calculated with cv::stereoRectify()
+
+  fps: 30.0
+  cols: 640
+  rows: 480
+  focal_x_baseline: 29.167025
+
+  color_order: "RGB"
+
+#======================#
+# Stereo Rectification #
+#======================#
+
+# original intrinsic parameters (K, D) and stereo-recitification parameters (R)
+# matrices (K, R) are written in row-major order
+
+StereoRectifier:
+  K_left: [395.102688, 0.000000, 337.908026, 0.000000, 527.387801, 307.227469, 0.000000, 0.000000, 1.000000]
+  D_left: [-0.328106, 0.106174, 0.001520, -0.000444, 0.000000]
+  R_left: [0.999951, 0.001795, -0.009692, -0.001752, 0.999988, 0.004487, 0.009700, -0.004470, 0.999943]
+  K_right: [395.602305, 0.000000, 347.651382, 0.000000, 528.512553, 273.279410, 0.000000, 0.000000, 1.000000]
+  D_right: [-0.312574, 0.086121, 0.000794, 0.001226, 0.000000]
+  R_right: [0.999605, 0.006826, -0.027279, -0.006948, 0.999966, -0.004384, 0.027248, 0.004572, 0.999618]
+
+#================#
+# ORB Parameters #
+#================#
+
+Feature:
+  max_num_keypoints: 2000
+  scale_factor: 1.2
+  num_levels: 8
+  ini_fast_threshold: 20
+  min_fast_threshold: 7
+
+#========================#
+# Initializer Parameters #
+#========================#
+
+Initializer:
+
+#====================#
+# Mapping Parameters #
+#====================#
+
+Mapping:
+  baseline_dist_thr: 0.02
+
+SocketPublisher:
+  image_quality: 5
+  publish_points: "false"
