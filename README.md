@@ -153,7 +153,7 @@ tar -xvzf /tmp/calibrationdata.tar.gz
 
 ```
 roscd jnmouse_ros_examples/
-sudo docker build -t openvslam-socket-ros . --build-arg NUM_THREADS=4
+sudo docker build -t openvslam-socket-ros . -f ./docker/open-vslam/Dockerfile --build-arg NUM_THREADS=4
 ```
 
 SLAMした結果はブラウザで確認することができます。ブラウザのアクセス先となるWebサーバを起動するためのDockerfileをビルドします。clone先は任意のディレクトリで問題ありません。
