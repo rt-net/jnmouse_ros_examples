@@ -36,8 +36,6 @@ class ImageUndistortion:
         self.mf.registerCallback(self._img_callback)
         self._pub_rect_img_l = rospy.Publisher("/camera_l/image_rect_color", Image, queue_size=1)
         self._pub_rect_img_r = rospy.Publisher("/camera_r/image_rect_color", Image, queue_size=1)
-        self._captured_img_width = rosparam.get_param("/csi_cam_0/image_width")
-        self._captured_img_height = rosparam.get_param("/csi_cam_0/image_height")
 
         camera_param = np.load('{}/config/camera_param_fisheye.npz'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
         mtx_l, dist_l, mtx_r, dist_r, R, T = [camera_param[i] for i in ["mtx_l", "dist_l", "mtx_r", "dist_r", "R", "T"]]
@@ -52,6 +50,8 @@ class ImageUndistortion:
 
     def _img_callback(self, img_l, img_r):
         try:
+            self._captured_img_height = img_l.height
+            self._captured_img_width = img_l.width
             self._captured_img_l = self._cv_bridge.imgmsg_to_cv2(img_l, "bgr8")
             self._captured_img_r = self._cv_bridge.imgmsg_to_cv2(img_r, "bgr8")
         except CvBridgeError as e:
