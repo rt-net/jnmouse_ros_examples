@@ -103,7 +103,7 @@ class StereoDepthEstimator:
             depth = self.Q[2, 3] / (self.Q[3, 2] * disparity + self.Q[3, 3])
 
             depth[np.where(depth < 0)] = 0
-            depth[np.where(depth > 500)] = 0
+            depth[np.where(depth > 400)] = 0
             depth = depth.astype(np.uint16)
             
             self._monitor(depth, self._pub_depth_img)
