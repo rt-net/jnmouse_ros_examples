@@ -72,6 +72,8 @@ class StereoDepthEstimator:
 
     def _img_callback(self, img_l, img_r):
         try:
+            self._captured_img_height = img_l.height
+            self._captured_img_width = img_l.width
             self._captured_img_l = self._cv_bridge.imgmsg_to_cv2(img_l, "bgr8")
             self._captured_img_r = self._cv_bridge.imgmsg_to_cv2(img_r, "bgr8")
 
