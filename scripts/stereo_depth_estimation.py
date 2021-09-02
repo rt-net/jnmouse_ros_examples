@@ -36,9 +36,9 @@ class StereoDepthEstimator:
         self.mf = message_filters.ApproximateTimeSynchronizer([sub_img_l, sub_img_r], 100, 10.0)
         self.mf.registerCallback(self._img_callback)
         self._pub_depth_img = rospy.Publisher("/depth/image_rect", Image, queue_size=1)
-        self._captured_img_width = rosparam.get_param("/csi_cam_0/image_width")
-        self._captured_img_height = rosparam.get_param("/csi_cam_0/image_height")
-        self._is_debug = rosparam.get_param("/jnm_depth_estimator/debug")
+        self._captured_img_width = rospy.get_param("/csi_cam_0/image_width")
+        self._captured_img_height = rospy.get_param("/csi_cam_0/image_height")
+        self._is_debug = rospy.get_param("~debug")
         self.img_scale = 0.5
 
         rospy.loginfo("loading camera parameter")
