@@ -22,7 +22,6 @@ import numpy as np
 import copy
 import message_filters
 from sensor_msgs.msg import Image
-import rosparam
 from cv_bridge import CvBridge, CvBridgeError
 
 class ImageUndistortion:
@@ -34,14 +33,22 @@ class ImageUndistortion:
         self._cv_bridge = CvBridge()
         self._captured_img_l = None
         self._captured_img_r = None
-        sub_img_l = message_filters.Subscriber("/csi_cam_0/image_raw", Image)
-        sub_img_r = message_filters.Subscriber("/csi_cam_1/image_raw", Image)
+        self._captured_img_height = 1
+        self._captured_img_width = 1
+        self._left_camera_image_topic = "/csi_cam_0/image_raw"
+        self._right_camera_image_topic = "/csi_cam_1/image_raw"
+        sub_img_l = message_filters.Subscriber(self._left_camera_image_topic, Image)
+        sub_img_r = message_filters.Subscriber(self._right_camera_image_topic, Image)
         self.mf = message_filters.ApproximateTimeSynchronizer([sub_img_l, sub_img_r], 100, 10.0)
         self.mf.registerCallback(self._img_callback)
         self._pub_rect_img_l = rospy.Publisher("/camera_l/image_rect_color", Image, queue_size=1)
         self._pub_rect_img_r = rospy.Publisher("/camera_r/image_rect_color", Image, queue_size=1)
-        self._captured_img_width = rosparam.get_param("/csi_cam_0/image_width")
-        self._captured_img_height = rosparam.get_param("/csi_cam_0/image_height")
+
+        rospy.loginfo("waiting for left camera image")
+        rospy.wait_for_message(self._left_camera_image_topic, Image)
+        rospy.loginfo("waiting for right camera image")
+        rospy.wait_for_message(self._right_camera_image_topic, Image)
+        rospy.loginfo("camera image topic received")
 
         camera_param = np.load('{}/config/camera_param_fisheye.npz'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
         mtx_l, dist_l, mtx_r, dist_r, R, T = [camera_param[i] for i in ["mtx_l", "dist_l", "mtx_r", "dist_r", "R", "T"]]
@@ -56,6 +63,8 @@ class ImageUndistortion:
 
     def _img_callback(self, img_l, img_r):
         try:
+            self._captured_img_height = img_l.height
+            self._captured_img_width = img_l.width
             self._captured_img_l = self._cv_bridge.imgmsg_to_cv2(img_l, "bgr8")
             self._captured_img_r = self._cv_bridge.imgmsg_to_cv2(img_r, "bgr8")
         except CvBridgeError as e:
@@ -82,6 +91,7 @@ class ImageUndistortion:
 
         else:
             rospy.loginfo('There is no valid captured image')
+
 
 if __name__ == '__main__':
     rospy.init_node('image_undistortion')
