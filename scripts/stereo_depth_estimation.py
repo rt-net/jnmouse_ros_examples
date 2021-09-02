@@ -20,10 +20,8 @@ import rospkg
 import cv2
 import numpy as np
 import copy
-import glob
 import message_filters
 from sensor_msgs.msg import Image
-import rosparam
 from cv_bridge import CvBridge, CvBridgeError
 
 class StereoDepthEstimator:
@@ -31,15 +29,23 @@ class StereoDepthEstimator:
         self._cv_bridge = CvBridge()
         self._captured_img_l = None
         self._captured_img_r = None
-        sub_img_l = message_filters.Subscriber("/camera_l/image_rect_color", Image)
-        sub_img_r = message_filters.Subscriber("/camera_r/image_rect_color", Image)
+        self._captured_img_width = 1
+        self._captured_img_height = 1
+        self._left_camera_image_topic = "/camera_l/image_rect_color"
+        self._right_camera_image_topic = "/camera_r/image_rect_color"
+        sub_img_l = message_filters.Subscriber(self._left_camera_image_topic, Image)
+        sub_img_r = message_filters.Subscriber(self._right_camera_image_topic, Image)
         self.mf = message_filters.ApproximateTimeSynchronizer([sub_img_l, sub_img_r], 100, 10.0)
         self.mf.registerCallback(self._img_callback)
         self._pub_depth_img = rospy.Publisher("/depth/image_rect", Image, queue_size=1)
-        self._captured_img_width = rospy.get_param("/csi_cam_0/image_width")
-        self._captured_img_height = rospy.get_param("/csi_cam_0/image_height")
         self._is_debug = rospy.get_param("~debug")
         self.img_scale = 0.5
+
+        rospy.loginfo("waiting for left camera image")
+        rospy.wait_for_message(self._left_camera_image_topic, Image)
+        rospy.loginfo("waiting for right camera image")
+        rospy.wait_for_message(self._right_camera_image_topic, Image)
+        rospy.loginfo("camera image topic received")
 
         rospy.loginfo("loading camera parameter")
         camera_param = np.load('{}/config/camera_param_fisheye.npz'.format(rospkg.RosPack().get_path('jnmouse_ros_examples')))
@@ -105,11 +111,12 @@ class StereoDepthEstimator:
             depth[np.where(depth < 0)] = 0
             depth[np.where(depth > 400)] = 0
             depth = depth.astype(np.uint16)
-            
+
             self._monitor(depth, self._pub_depth_img)
-            
+
         else:
             rospy.loginfo('There is no valid captured image')
+
 
 if __name__ == '__main__':
     rospy.init_node('jnm_depth_estimator')
