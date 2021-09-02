@@ -27,6 +27,10 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class ImageUndistortion:
     def __init__(self):
+        cv_version = int(cv2.__version__.split('.')[0])
+        if cv_version <= 4:
+            rospy.logwarn("image_undistortion requires OpenCV version >= 4.0.0")
+
         self._cv_bridge = CvBridge()
         self._captured_img_l = None
         self._captured_img_r = None
