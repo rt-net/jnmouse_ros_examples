@@ -118,7 +118,7 @@ OpenVSLAMを用いてVisual SLAMを行うコード例です。
 
 #### 使い方
 ##### 準備編
-ORBボキャブラリーファイルをダウンロードします。
+Visual SLAMに必要なORBボキャブラリーファイルをダウンロードします。
 
 ```
 roscd jnmouse_ros_examples/config/
@@ -132,7 +132,10 @@ sudo apt-get install -y ros-melodic-camera-calibration
 sudo apt-get install -y ros-melodic-image-proc
 ```
 
-JNMouseにディスプレイを接続し、下記コマンドでカメラ映像の配信とcamera_calibrationを開始します。camera_calibrationにはチェスボードが必要です。[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/blob/master/notebooks/camera_undistort/undistort/undistort_data_collection.ipynb)を参考にチェスボードを作成してください。作成したチェスボードのマス目の数や大きさに合わせて下記コマンドの`--size`と`--square`オプションを変更してから実行してください。
+JNMouseにディスプレイを接続し、下記コマンドでカメラ映像の配信とcamera_calibrationを開始します。
+camera_calibrationにはチェスボードが必要です。
+[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/blob/master/notebooks/camera_undistort/undistort/undistort_data_collection.ipynb)を参考にチェスボードを作成してください。
+作成したチェスボードのマス目の数や大きさに合わせて下記コマンドの`--size`と`--square`オプションを変更してから実行してください。
 
 ```
 roslaunch jetson_nano_csi_cam jetson_dual_csi_cam.launch width:=640 height:=480
