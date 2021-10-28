@@ -124,7 +124,7 @@ Visual SLAMに必要なORBボキャブラリーファイルをダウンロード
 roscd jnmouse_ros_examples/config/
 curl -sL "https://github.com/OpenVSLAM-Community/FBoW_orb_vocab/raw/main/orb_vocab.fbow" -o orb_vocab.fbow
 ```
-[こちらのNotebook(undistort_fisheye_stereo.ipynb)](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でコンフィグファイルを作成し`config/jnmouse_stereo.yaml`を作成したものと置き換えます。Notebookの使用方法はリンク先のドキュメントをご覧ください。  
+[こちらのNotebook(undistort_fisheye_stereo.ipynb)](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でコンフィグファイルを作成し`jnmouse_ros_examples/config/jnmouse_stereo.yaml`を作成したものと置き換えます。Notebookの使用方法はリンク先のドキュメントをご覧ください。  
 
 下記コマンドでOpenVSLAMを起動するためのDockerfileをビルドします。
 
@@ -195,11 +195,15 @@ roslaunch jnmouse_ros_examples localization_docker.launch slam_mode:=mono
 
 http://jetson-4-3.local:3001/
 
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_openvslam_socket.png)
+
 Rvizでロボットの位置姿勢を確認することができます。`config/jnmouse_vslam.rviz`をJetson Nano Mouseにssh接続しているPCにダウンロードして下記コマンドを実行します。
 
 ```
 rviz -d jnmouse_vslam.rviz
 ```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_openvslam_rviz.png)
 
 ## ライセンス
 
