@@ -112,6 +112,34 @@ rqt_image_view
 roslaunch jnmouse_ros_examples line_following_undistortion.launch
 ```
 
+### stereo_depth_estimation
+
+ステレオカメラ画像から深度推定を行うコード例です。
+
+#### 使い方
+image_undistortionによる補正済み画像を用いるため、image_undistortionの環境構築と動作確認を行ってください。
+
+次のコマンドでノードを起動します。
+
+```sh
+roslaunch jnmouse_ros_examples stereo_depth_estimation.launch
+```
+
+/depth/image_rectに深度画像が配信されます。  
+リモートでrvizなどを使用すれば、深度画像を見ることができます。
+
+```sh
+rviz
+```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_stereo_depth.png)
+
+下記コマンドを実行した場合はカメラ中央に写った物体までの推定距離がターミナルに表示されます。また目印として深度画像中央に円が描画されます。
+
+```sh
+roslaunch jnmouse_ros_examples stereo_depth_estimation.launch debug:=true
+```
+
 ### visual_slam
 
 OpenVSLAMを用いてVisual SLAMを行うコード例です。
