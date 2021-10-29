@@ -208,6 +208,7 @@ RUN set -x && \
   : "install ROS packages" && \
   apt-get install -y -qq \
     ros-${ROS_DISTRO}-geometry2 \
+    ros-${ROS_DISTRO}-roslint \
     ros-${ROS_DISTRO}-image-transport && \
   : "remove cache" && \
   apt-get autoremove -y -qq && \

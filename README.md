@@ -180,8 +180,6 @@ sudo docker run --rm -it --name openvslam-socket-ros --net=host --volume /home/j
 openvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。`JNMouseIP`はJetson Nano MouseのIPアドレスに置き換えてください。
 
 ```
-apt-get update
-rosdep install -r -y -i --from-paths .
 cd ~/catkin_ws && catkin_make
 source ~/catkin_ws/devel/setup.bash
 export ROS_IP=JNMouseIP
