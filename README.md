@@ -75,7 +75,8 @@ sudo nvpmodel -m 1
 
 ### line_following
 
-左カメラでキャプチャした黒線を使ってライントレースを行うコード例です。
+左カメラでキャプチャした黒線を使ってライントレースを行うコード例です。  
+詳細は https://rt-net.jp/mobility/archives/15597 に記載しています。
 
 #### 使い方
 
@@ -100,7 +101,8 @@ rqt_image_view
 
 ### image_undistortion
 
-ステレオカメラ画像の歪み補正とステレオ平行化を行うコード例です。
+ステレオカメラ画像の歪み補正とステレオ平行化を行うコード例です。  
+詳細は https://rt-net.jp/mobility/archives/17588 に記載しています。
 
 #### 使い方
 
@@ -142,14 +144,15 @@ roslaunch jnmouse_ros_examples teleop_vr.launch
 
 VRグラスをセットしたスマートフォンから http://jnmouse.local:8085/jnmouse_ros_examples/ にアクセスします。
 
-![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_vr.png)
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_vr.jpg)
 
 
 [↑目次に戻る](#toc)
 
 ### stereo_depth_estimation
 
-ステレオカメラ画像から深度推定を行うコード例です。
+ステレオカメラ画像から深度推定を行うコード例です。  
+詳細は https://rt-net.jp/mobility/archives/18036 に記載しています。
 
 #### 使い方
 
