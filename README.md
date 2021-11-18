@@ -8,6 +8,7 @@ Jetson Nano MouseのROSサンプルコード集です。
 * [インストール](#installation)
 * [サンプルの実行方法](#samples)
   * [ライントレース](#line_following)
+  * [スマホVRでJetson Nano Mouseを操作](#teleop_vr)
   * [ステレオカメラ画像の歪み補正とステレオ平行化](#image_undistortion)
   * [ステレオカメラ画像からの深度推定](#stereo_depth_estimation)
 
@@ -127,12 +128,31 @@ roslaunch jnmouse_ros_examples line_following_undistortion.launch
 ```
 
 [↑目次に戻る](#toc)
+### teleop_vr
+
+スマホVRでJetson Nano Mouseを操作するためのコード例です。  
+詳細は https://rt-net.jp/mobility/archives/16161 に記載しています。
+#### 使い方
+
+次のコマンドでノードを起動します。
+
+```sh
+roslaunch jnmouse_ros_examples teleop_vr.launch
+```
+
+VRグラスをセットしたスマートフォンから http://jnmouse.local:8085/jnmouse_ros_examples/ にアクセスします。
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_image_undistortion_screenshot.png)
+
+
+[↑目次に戻る](#toc)
 
 ### stereo_depth_estimation
 
 ステレオカメラ画像から深度推定を行うコード例です。
 
 #### 使い方
+
 image_undistortionによる補正済み画像を用いるため、image_undistortionの環境構築と動作確認を行ってください。
 
 次のコマンドでノードを起動します。
