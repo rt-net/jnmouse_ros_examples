@@ -6,7 +6,7 @@ Jetson Nano MouseのROSサンプルコード集です。
 
 * [動作環境](#requirements)
 * [インストール](#installation)
-* [サンプルの使い方](#samples)
+* [サンプルの実行方法](#samples)
   * [ライントレース](#line_following)
   * [ステレオカメラ画像の歪み補正とステレオ平行化](#image_undistortion)
   * [ステレオカメラ画像からの深度推定](#stereo_depth_estimation)
