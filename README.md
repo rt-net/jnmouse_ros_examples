@@ -142,7 +142,7 @@ roslaunch jnmouse_ros_examples teleop_vr.launch
 
 VRグラスをセットしたスマートフォンから http://jnmouse.local:8085/jnmouse_ros_examples/ にアクセスします。
 
-![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_ros_examples_image_undistortion_screenshot.png)
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_vr.png)
 
 
 [↑目次に戻る](#toc)
