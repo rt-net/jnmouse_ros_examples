@@ -11,6 +11,7 @@ Jetson Nano MouseのROSサンプルコード集です。
   * [スマホVRでJetson Nano Mouseを操作](#teleop_vr)
   * [ステレオカメラ画像の歪み補正とステレオ平行化](#image_undistortion)
   * [ステレオカメラ画像からの深度推定](#stereo_depth_estimation)
+  * [OpenVSLAMによるVisual SLAM](#visual_slam)
 
 <h2 id="requirements">動作環境</h2>
 
@@ -48,6 +49,7 @@ git clone https://github.com/rt-net/jnmouse_ros_examples.git
 git clone https://github.com/rt-net/jetson_nano_csi_cam_ros.git 
 git clone https://github.com/rt-net/gscam.git
 git clone https://github.com/ryuichiueda/raspimouse_ros_2.git
+git clone https://github.com/rt-net/jnmouse_description.git
 
 # Install dependencies
 rosdep install -r -y -i --from-paths .
@@ -106,7 +108,7 @@ rqt_image_view
 
 #### 使い方
 
-[こちらのNotebook](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
+[こちらのNotebook(undistort_fisheye_stereo.ipynb)](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でカメラパラメータファイルを作成し`config/camera_param_fisheye.npz`を作成したものと置き換えます。  
 
 次のコマンドでノードを起動します。
 
@@ -178,6 +180,99 @@ rviz
 ```sh
 roslaunch jnmouse_ros_examples stereo_depth_estimation.launch debug:=true
 ```
+
+[↑目次に戻る](#toc)
+
+### visual_slam
+
+OpenVSLAMを用いてVisual SLAMを行うコード例です。
+
+#### 使い方
+##### 準備編
+Visual SLAMに必要なORBボキャブラリーファイルをダウンロードします。
+
+```
+roscd jnmouse_ros_examples/config/
+curl -sL "https://github.com/OpenVSLAM-Community/FBoW_orb_vocab/raw/main/orb_vocab.fbow" -o orb_vocab.fbow
+```
+[こちらのNotebook(undistort_fisheye_stereo.ipynb)](https://github.com/rt-net/jnm_jupyternotebook/tree/master/notebooks/camera_undistort)でコンフィグファイルを作成し`jnmouse_ros_examples/config/jnmouse_stereo.yaml`を作成したものと置き換えます。Notebookの使用方法はリンク先のドキュメントをご覧ください。  
+
+下記コマンドでOpenVSLAMを起動するためのDockerfileをビルドします。
+
+```
+roscd jnmouse_ros_examples/
+sudo docker build -t openvslam-socket-ros . -f ./docker/open-vslam/Dockerfile --build-arg NUM_THREADS=4
+```
+
+SLAMした結果はブラウザで確認することができます。ブラウザのアクセス先となるWebサーバを起動するためのDockerfileをビルドします。clone先は任意のディレクトリで問題ありません。
+
+```
+git clone https://github.com/OpenVSLAM-Community/openvslam.git
+cd openvslam/viewer/
+sudo docker build -t openvslam-server .
+```
+
+##### 起動編
+下記コマンドでDockerコンテナを起動します。
+
+```
+sudo docker run --rm -it --name openvslam-server --net=host openvslam-server
+sudo docker run --rm -it --name openvslam-socket-ros --net=host --volume /home/jetbot/catkin_ws/src/jnmouse_ros_examples:/root/catkin_ws/src/jnmouse_ros_examples openvslam-socket-ros
+```
+
+openvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。`JNMouseIP`はJetson Nano MouseのIPアドレスに置き換えてください。
+
+```
+cd ~/catkin_ws && catkin_make
+source ~/catkin_ws/devel/setup.bash
+export ROS_IP=JNMouseIP
+export ROS_MASTER_URI=http://$ROS_IP:11311
+```
+
+Dockerコンテナ外で下記コマンドを実行します。カメラ映像が配信され、teleop_twist_keyboardでJetson Nano Mouseを操作することができます。
+
+```
+roslaunch jnmouse_ros_examples vslam_host.launch
+rosservice call /motor_on
+```
+
+SLAMを行う場合はopenvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。デフォルトではステレオカメラを用いてSLAMを行います。
+
+```
+roslaunch jnmouse_ros_examples slam_docker.launch
+```
+
+単眼カメラの場合は下記コマンドを実行します。
+
+```
+roslaunch jnmouse_ros_examples slam_docker.launch slam_mode:=mono
+```
+
+Localizationを行う場合はopenvslam-socket-rosのDockerコンテナ内で下記コマンドを実行します。デフォルトではステレオカメラを用いてLocalizationを行います。
+
+```
+roslaunch jnmouse_ros_examples localization_docker.launch
+```
+
+単眼カメラの場合は下記コマンドを実行します。
+
+```
+roslaunch jnmouse_ros_examples localization_docker.launch slam_mode:=mono
+```
+
+ブラウザから下記アドレスにアクセスするとOpenVSLAMの実行結果を見ることができます。
+
+http://jetson-4-3.local:3001/
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_openvslam_socket.png)
+
+Rvizでロボットの位置姿勢を確認することができます。`config/jnmouse_vslam.rviz`をJetson Nano Mouseにssh接続しているPCにダウンロードして下記コマンドを実行します。
+
+```
+rviz -d jnmouse_vslam.rviz
+```
+
+![](https://rt-net.github.io/images/jetson-nano-mouse/jnmouse_openvslam_rviz.png)
 
 [↑目次に戻る](#toc)
 

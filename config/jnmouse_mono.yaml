@@ -1,0 +1,52 @@
+#==============#
+# Camera Model #
+#==============#
+# 下記ページを参考にしています
+# https://masato-ka.hatenablog.com/entry/2019/07/21/235645
+
+Camera:
+  name: "jnmouse mono"
+  setup: "monocular"
+  model: "perspective"
+
+  fx: 1138.042594 
+  fy: 1152.150891 
+  cx: 314.573090 
+  cy: 273.959896 
+
+  k1: -2.663941 
+  k2: 5.967979 
+  p1: -0.053529 
+  p2: 0.031916 
+  k3: 0.0
+
+  fps: 5.0
+  cols: 640
+  rows: 480 
+
+  color_order: "RGB"
+
+#================#
+# ORB Parameters #
+#================#
+
+Feature:
+  max_num_keypoints: 2000
+  scale_factor: 1.2
+  num_levels: 8
+  ini_fast_threshold: 20
+  min_fast_threshold: 7
+
+#========================#
+# Initializer Parameters #
+#========================#
+
+Initializer:
+  scaling_factor: 5.0
+
+#====================#
+# Mapping Parameters #
+#====================#
+
+Mapping:
+  baseline_dist_thr_ratio: 0.02
